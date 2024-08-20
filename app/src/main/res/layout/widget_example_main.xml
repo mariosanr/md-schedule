@@ -1,0 +1,105 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/Widget.MarkdownSchedule.AppWidget.Container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:theme="@style/Theme.AppCompat.DayNight.DarkActionBar.AppWidgetContainer">
+
+    <TextView
+        android:id="@+id/tvWidgetDate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingBottom="2dp"
+        android:contentDescription="Today's date"
+        android:text="Sun: Dec 31, 2000"
+        android:textSize="12sp"
+        android:textStyle="italic"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="5dp"
+        android:orientation="vertical"
+        android:layout_below="@id/tvWidgetDate"
+        >
+
+
+        <RelativeLayout
+            android:id="@+id/rlWidgetTaskList"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/task_background"
+            >
+
+            <TextView
+                android:id="@+id/tvWidgetTaskSummary"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentTop="true"
+                android:layout_alignParentStart="true"
+                android:layout_toStartOf="@id/tvPriority"
+                android:paddingStart="10dp"
+                android:paddingTop="5dp"
+                android:text="11:00 - 12:00"
+                android:textSize="12sp"
+                android:textColor="@color/secondary_unchecked_text"
+                android:textStyle="italic|bold"
+                />
+
+            <TextView
+                android:id="@+id/tvPriority"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentTop="true"
+                android:layout_alignParentEnd="true"
+                android:paddingHorizontal="8dp"
+                android:paddingTop="5dp"
+                android:text="🔺"
+                android:textSize="15sp"
+                />
+
+
+            <TextView
+                android:id="@+id/tvTask"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_below="@+id/tvWidgetTaskSummary"
+                android:text="Important meeting"
+                android:textColor="@color/unchecked_text"
+                android:textSize="16sp"
+                android:paddingBottom="8dp"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
+                />
+
+        </RelativeLayout>
+
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="3dp"
+            android:background="@drawable/task_background"
+            >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:text="Call John"
+                android:textColor="@color/unchecked_text"
+                android:textSize="16sp"
+                android:paddingTop="4dp"
+                android:paddingBottom="8dp"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
+                />
+
+        </RelativeLayout>
+
+    </LinearLayout>
+
+</RelativeLayout>

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/rlTaskList"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/task_background"
+    android:clickable="true"
+    android:focusable="true"
+    >
+
+    <TextView
+        android:id="@+id/tvTaskDateSummary"
+        tools:ignore="RtlSymmetry"
+        android:clickable="false"
+        android:focusable="false"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true"
+        android:layout_toStartOf="@id/tvPriority"
+        android:paddingStart="10dp"
+        android:paddingTop="5dp"
+        android:text="Due today"
+        android:textSize="14sp"
+        android:textColor="@color/secondary_unchecked_text"
+        android:textStyle="italic|bold"
+        />
+    <TextView
+        android:id="@+id/tvPriority"
+        tools:ignore="RtlSymmetry"
+        android:clickable="false"
+        android:focusable="false"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:paddingHorizontal="8dp"
+        android:paddingTop="5dp"
+        android:text="🔺"
+        android:textSize="18sp"
+         />
+
+
+    <TextView
+        android:id="@+id/tvTask"
+        android:clickable="false"
+        android:focusable="false"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_below="@+id/tvTaskDateSummary"
+        android:text="@string/example"
+        android:textColor="@color/unchecked_text"
+        android:textSize="@dimen/task_text_size"
+        android:paddingTop="6dp"
+        android:paddingBottom="16dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        />
+
+</RelativeLayout>

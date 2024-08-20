@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/grey_blur"
+    >
+
+    <ScrollView
+        android:id="@+id/scrollView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="20dp"
+        android:orientation="vertical"
+        android:scrollbarThumbVertical="@null"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        >
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/mainLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/popup_task_background"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <ImageButton
+                android:id="@+id/ibClose"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end|center"
+                android:background="@color/transparent"
+                android:paddingTop="10dp"
+                android:paddingEnd="10dp"
+                android:paddingStart="10dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:srcCompat="@drawable/ic_close"
+                tools:ignore="RtlSymmetry" />
+
+            <TextView
+                android:id="@+id/tvTaskDateSummary"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                app:layout_constraintHorizontal_bias="0"
+                android:paddingStart="@dimen/task_popup_border_padding"
+                android:text="Due Today"
+                android:textColor="@color/unchecked_text"
+                android:textSize="@dimen/task_popup_text_size"
+                android:textStyle="italic|bold"
+                app:layout_constraintEnd_toStartOf="@+id/tvPriority"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/ibClose"
+                tools:ignore="RtlSymmetry" />
+
+            <TextView
+                android:id="@+id/tvEvDateTime"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                app:layout_constraintHorizontal_bias="0"
+                android:paddingStart="@dimen/task_popup_border_padding"
+                android:text="Event starts at 09:00"
+                android:textColor="@color/unchecked_text"
+                android:textSize="@dimen/task_popup_text_size"
+                android:textStyle="italic|bold"
+                app:layout_constraintEnd_toStartOf="@+id/tvStatus"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/tvTaskDateSummary"
+                tools:ignore="RtlSymmetry" />
+
+            <TextView
+                android:id="@+id/tvPriority"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingHorizontal="@dimen/task_popup_border_padding"
+                android:text="Normal Priority"
+                android:textColor="@color/unchecked_text"
+                android:textSize="@dimen/task_popup_text_size"
+                android:textStyle="italic|bold"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/ibClose"
+                tools:ignore="RtlSymmetry" />
+
+            <TextView
+                android:id="@+id/tvStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingHorizontal="@dimen/task_popup_border_padding"
+                android:text="To Do"
+                android:textColor="@color/unchecked_text"
+                android:textSize="@dimen/task_popup_text_size"
+                android:textStyle="italic|bold"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/tvPriority"
+                tools:ignore="RtlSymmetry" />
+
+            <TextView
+                android:id="@+id/tvScheduledDate"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:paddingStart="@dimen/task_popup_border_padding"
+                android:paddingTop="20dp"
+                android:text="Scheduled: 2024-08-05"
+                android:textColor="@color/unchecked_text"
+                android:textSize="@dimen/task_popup_text_size"
+                android:textStyle="italic"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/tvEvDateTime"
+                tools:ignore="RtlSymmetry" />
+
+            <TextView
+                android:id="@+id/tvStartDate"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:paddingStart="@dimen/task_popup_border_padding"
+                android:text="Start: 2024-08-05"
+                android:textColor="@color/unchecked_text"
+                android:textSize="@dimen/task_popup_text_size"
+                android:textStyle="italic"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/tvScheduledDate"
+                tools:ignore="RtlSymmetry" />
+
+            <TextView
+                android:id="@+id/tvDueDate"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:paddingStart="@dimen/task_popup_border_padding"
+                android:text="Due: 2024-08-05"
+                android:textColor="@color/unchecked_text"
+                android:textSize="@dimen/task_popup_text_size"
+                android:textStyle="italic"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/tvStartDate"
+                tools:ignore="RtlSymmetry" />
+
+            <TextView
+                android:id="@+id/tvEvDate"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                app:layout_constraintHorizontal_bias="0"
+                android:paddingStart="@dimen/task_popup_border_padding"
+                android:paddingTop="20dp"
+                android:text="Event: 2024-08-05"
+                android:textColor="@color/unchecked_text"
+                android:textSize="@dimen/task_popup_text_size"
+                android:textStyle="italic"
+                app:layout_constraintEnd_toStartOf="@+id/tvEvTime"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/tvDueDate"
+                tools:ignore="RtlSymmetry" />
+
+            <TextView
+                android:id="@+id/tvEvTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingTop="20dp"
+                android:paddingHorizontal="@dimen/task_popup_border_padding"
+                android:text="09:00 - 11:00"
+                android:textColor="@color/unchecked_text"
+                android:textSize="@dimen/task_popup_text_size"
+                android:textStyle="italic"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/tvDueDate"
+                tools:ignore="RtlSymmetry" />
+
+            <TextView
+                android:id="@+id/tvTask"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:paddingStart="@dimen/task_popup_border_padding"
+                android:paddingTop="20dp"
+                android:paddingEnd="@dimen/task_popup_border_padding"
+                android:paddingBottom="20dp"
+                android:text="@string/example"
+                android:textColor="@color/unchecked_text"
+                android:textSize="@dimen/big_task_text_size"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/tvEvDate"
+                tools:ignore="RtlSymmetry" />
+
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </ScrollView>
+</androidx.constraintlayout.widget.ConstraintLayout>

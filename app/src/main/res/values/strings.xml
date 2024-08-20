@@ -1,0 +1,22 @@
+<resources>
+    <string name="app_name">Markdown Schedule</string>
+    <string name="example">Example</string>
+    <string name="exampleDate">Today, Dec 31, 2000</string>
+    <string name="loading">Loading…</string>
+    <string name="timeTasksTitle"><u>Schedule</u></string>
+    <string name="timeTasksNone">No time-sensitive tasks were found for today.
+        \nRefresh or check Settings/Folder Paths if there are tasks to be found.</string>
+    <string name="nonTimeTasksTitle"><u>Tasks</u></string>
+    <string name="nonTimeTasksNone">No tasks were found for today.
+        \nRefresh or check Settings/Folder Paths if there are tasks to be found.</string>
+    <string name="widgetTasksNone">No tasks were found today.</string>
+    <string name="action_settings">Settings</string>
+    <string name="action_reload">Reload</string>
+    <string name="pathsButton">Add Path</string>
+    <string name="pathsTitle"><u>Folder Paths</u></string>
+    <string name="pathsSubtitle">Add all the folders where you want to look for tasks. The search is recursive, meaning that it will look through all subfolders too.
+        \n<i>Keep in mind: The more general the path is, the longer it is going to take to update</i> </string>
+    <string name="appwidget_text">EXAMPLE</string>
+    <string name="add_widget">Add widget</string>
+    <string name="app_widget_description">Display your tasks for today</string>
+</resources>

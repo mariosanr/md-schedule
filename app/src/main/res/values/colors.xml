@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="transparent">#00FFFFFF</color>
+    <color name="grey_blur">#B3222222</color>
+    <color name="red">#FF1D1D</color>
+    <color name="time_bar">#462B78</color>
+    <color name="card_grey">#5E5E5E</color>
+    <color name="unchecked_text">#E6E6E6</color>
+    <color name="checked_text">#878787</color>
+    <color name="secondary_unchecked_text">#CDCDCD</color>
+    <color name="unchecked_card">#D9242234</color>
+    <color name="solid_unchecked_card">#282637</color>
+    <color name="checked_card">#E6242234</color>
+    <color name="unchecked_card_purple">#781F91</color>
+    <color name="checked_card_purple">#442D4A</color>
+    <color name="tv_hour">#CC5E5E5E</color>
+    <color name="long_hour">#CC707070</color>
+    <color name="light_blue_50">#FFE1F5FE</color>
+    <color name="light_blue_200">#FF81D4FA</color>
+    <color name="light_blue_600">#FF039BE5</color>
+    <color name="light_blue_900">#FF01579B</color>
+</resources>

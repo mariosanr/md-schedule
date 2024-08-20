@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/rlWidgetTaskList"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/task_background"
+    >
+
+    <TextView
+        android:id="@+id/tvWidgetTaskSummary"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true"
+        android:layout_toStartOf="@id/tvPriority"
+        android:paddingStart="10dp"
+        android:paddingTop="5dp"
+        android:text="11:00 - 12:00"
+        android:textSize="14sp"
+        android:textColor="@color/secondary_unchecked_text"
+        android:textStyle="italic|bold"
+        tools:ignore="RtlSymmetry" />
+    <TextView
+        android:id="@+id/tvPriority"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:paddingHorizontal="8dp"
+        android:paddingTop="5dp"
+        android:text="🔺"
+        android:textSize="18sp"
+        />
+
+
+    <TextView
+        android:id="@+id/tvTask"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_below="@+id/tvWidgetTaskSummary"
+        android:text="@string/example"
+        android:textColor="@color/unchecked_text"
+        android:textSize="@dimen/task_text_size"
+        android:paddingTop="2dp"
+        android:paddingBottom="8dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        />
+
+</RelativeLayout>
