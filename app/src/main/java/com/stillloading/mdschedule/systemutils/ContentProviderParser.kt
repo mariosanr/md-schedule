@@ -19,6 +19,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.format.DateTimeParseException
 
 class ContentProviderParser(
     private val context: Context
@@ -169,7 +170,9 @@ class ContentProviderParser(
             if(moveToFirst()){
                 val dateTime = getString(dateTimeColumn)
                 if(dateTime != "null"){
-                    lastUpdated = LocalDateTime.parse(dateTime)
+                    try {
+                        lastUpdated = LocalDateTime.parse(dateTime)
+                    }catch (_: DateTimeParseException){}
                 }
             }
         }?.close()

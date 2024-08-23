@@ -18,7 +18,10 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
+import java.time.DateTimeException
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.format.DateTimeParseException
 
 class FileSystemManager(
     private val context: Context
@@ -29,17 +32,22 @@ class FileSystemManager(
         private val DEFAULT_TASKS_TAG = ""
         private val DEFAULT_SKIP_DIRECTORIES = setOf(".obsidian", ".trash")
 
+        private val DEFAULT_LAST_UPDATED = "null"
+
         private const val directoriesName = ScheduleProviderContract.SETTINGS.DIRECTORIES
         private const val tasksTagName = ScheduleProviderContract.SETTINGS.TASKS_TAG
         private const val skipDirectoriesName = ScheduleProviderContract.SETTINGS.SKIP_DIRECTORIES
+
+        private const val lastUpdatedName = ScheduleProviderContract.LAST_UPDATED.COLUMN_DATETIME
 
         private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
         private val directoriesKey = stringSetPreferencesKey(directoriesName)
         private val tasksTagKey = stringPreferencesKey(tasksTagName)
         private val skipDirectoriesKey = stringSetPreferencesKey(skipDirectoriesName)
+
+        private val lastUpdatedKey = stringPreferencesKey(lastUpdatedName)
     }
 
-    // FIXME Use the Preferences DataStore library instead of SharedPreferences
     suspend fun saveSettings(settingsData: SettingsData) {
         context.dataStore.edit { settings ->
             settings[directoriesKey] = settingsData.directories.map {
@@ -99,6 +107,25 @@ class FileSystemManager(
             skipDirectories = skipDirectories
         )
     }
+
+
+    fun getLastUpdatedFlow(): Flow<String>{
+        val flow: Flow<String> = context.dataStore.data.map { preferences ->
+            preferences[lastUpdatedKey] ?: DEFAULT_LAST_UPDATED
+        }
+        return flow
+    }
+
+    suspend fun getLastUpdated(flow: Flow<String>): String{
+        return flow.firstOrNull().toString()
+    }
+
+    suspend fun saveLastUpdated(dateTime: LocalDateTime){
+        context.dataStore.edit { settings ->
+            settings[lastUpdatedKey] = dateTime.toString() // FIXME maybe I should set a formatter to be sure
+        }
+    }
+
 
     suspend fun getTasksArray(settings: SettingsData, date: String): Array<TaskEntityData> = coroutineScope {
         if(settings.directories.isEmpty()){

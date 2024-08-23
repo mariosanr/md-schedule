@@ -10,6 +10,7 @@ import android.provider.BaseColumns
 import com.stillloading.mdschedule.data.SettingsFlowData
 import com.stillloading.mdschedule.data.toSettingsData
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.runBlocking
 import java.time.LocalDateTime
 
@@ -79,8 +80,7 @@ class ScheduleContentProvider : ContentProvider() {
 
     // Preferences Data Store
     private lateinit var settingsFlowData: SettingsFlowData
-
-    private var lastUpdated: LocalDateTime? = null
+    private lateinit var lastUpdatedFlow: Flow<String>
 
 
     override fun onCreate(): Boolean {
@@ -97,6 +97,7 @@ class ScheduleContentProvider : ContentProvider() {
         taskDao = taskDatabase.taskDao()
 
         settingsFlowData = fileSystemManager.getSettingsFlow()
+        lastUpdatedFlow = fileSystemManager.getLastUpdatedFlow()
 
         return true
     }
@@ -127,11 +128,13 @@ class ScheduleContentProvider : ContentProvider() {
                 taskDao.getAll()
             }
             3 -> {
-                val cursor = MatrixCursor(arrayOf(ScheduleProviderContract.LAST_UPDATED.COLUMN_DATETIME)).apply {
-                    addRow(arrayOf(lastUpdated.toString()))
-                }
+                runBlocking(Dispatchers.IO) {
+                    val cursor = MatrixCursor(arrayOf(ScheduleProviderContract.LAST_UPDATED.COLUMN_DATETIME)).apply {
+                        addRow(arrayOf(fileSystemManager.getLastUpdated(lastUpdatedFlow)))
+                    }
 
-                cursor
+                    cursor
+                }
             }
             else -> { // not recognized
                 throw IllegalArgumentException()
@@ -179,10 +182,10 @@ class ScheduleContentProvider : ContentProvider() {
                             val settings = fileSystemManager.getSettingsData(settingsFlowData)
 
                             taskDao.insertAll(*fileSystemManager.getTasksArray(settings, date))
+                            fileSystemManager.saveLastUpdated(LocalDateTime.now())
                         }
                     }
                     updatingDB = false
-                    lastUpdated = LocalDateTime.now()
                     context?.contentResolver?.notifyChange(uri, null)
                     return ScheduleProviderContract.CODE_SUCCESS
                 }else{

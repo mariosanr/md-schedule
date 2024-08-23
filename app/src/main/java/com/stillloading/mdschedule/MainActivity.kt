@@ -240,7 +240,9 @@ class MainActivity : AppCompatActivity() {
 
             val lastUpdated = contentProviderParser.getLastUpdated()
             if(lastUpdated != null){
-                val dateTimeFormatter = DateTimeFormatter.ofPattern("'Last updated at' HH:mm")
+                val dateTimeFormatter = if(lastUpdated.toLocalDate().isEqual(LocalDate.now()))
+                    DateTimeFormatter.ofPattern("'Last updated at' HH:mm") else
+                        DateTimeFormatter.ofPattern("'Last updated on' MMM d 'at' HH:mm")
                 tvLastUpdated.text = lastUpdated.format(dateTimeFormatter)
                 tvLastUpdated.visibility = View.VISIBLE
             }else{
