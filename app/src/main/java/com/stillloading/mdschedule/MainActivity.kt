@@ -76,6 +76,8 @@ class MainActivity : AppCompatActivity() {
     private var minHour: Int = -1
     private var maxHour: Int = -1
 
+    private var updatingTasks = false
+
     @SuppressLint("InflateParams")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -148,7 +150,9 @@ class MainActivity : AppCompatActivity() {
     override fun onRestart() {
         super.onRestart()
 
-        reloadTasks(false)
+        if(!updatingTasks){
+            reloadTasks(false)
+        }
     }
 
     private fun setTodayDate(){
@@ -198,6 +202,7 @@ class MainActivity : AppCompatActivity() {
         MainScope().launch {
             pbLoadingWheel.visibility = View.VISIBLE
             linearLayoutMain.alpha = 0.4f
+            updatingTasks = true
 
 
             val (timeTasks, nonTimeTasks) = contentProviderParser.getTasks(update) ?: return@launch
@@ -250,6 +255,8 @@ class MainActivity : AppCompatActivity() {
             if(firstLaunch){
                 reloadTasks(true, firstLaunch = false)
             }
+
+            updatingTasks = false
         }
     }
 

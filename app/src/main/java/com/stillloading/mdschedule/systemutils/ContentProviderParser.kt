@@ -47,11 +47,9 @@ class ContentProviderParser(
                     key == directoriesKey && value != "" -> {
                         settings.directories = value.split(",").map {
                             val uri = Uri.parse(it)
-                            // FIXME remove the path scheme
-                            Log.i(TAG, "Uri scheme: ${uri.scheme}")
                             DirectoryData(
                                 uri = uri,
-                                text = uri.path.toString().replace("${uri.scheme}:", "")
+                                text = uri.path.toString().substringAfter(":")
                             )
                         }.toMutableList()
                     }
