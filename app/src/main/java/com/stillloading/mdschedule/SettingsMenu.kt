@@ -13,18 +13,13 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.ActionBar
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.IntentCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.stillloading.mdschedule.data.DirectoryData
-import com.stillloading.mdschedule.data.SettingsData
-import com.stillloading.mdschedule.data.toContentValues
+import com.stillloading.mdschedule.data.SettingsDisplayData
 import com.stillloading.mdschedule.systemutils.ContentProviderParser
-import com.stillloading.mdschedule.systemutils.ScheduleProviderContract
-import org.json.JSONArray
-import java.io.File
 
 
 class SettingsMenu : AppCompatActivity() {
@@ -34,8 +29,9 @@ class SettingsMenu : AppCompatActivity() {
     private lateinit var contentProviderParser: ContentProviderParser
 
     private lateinit var directoryAdapter: DirectoryAdapter
-    private val settingFilename = "paths_settings"
     private lateinit var startForResult: ActivityResultLauncher<Intent>
+
+    private lateinit var settings: SettingsDisplayData
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -54,11 +50,9 @@ class SettingsMenu : AppCompatActivity() {
 
         contentProviderParser = ContentProviderParser(applicationContext)
 
-        // get the list of directories from the main activity
-        val directoryArrayList = IntentCompat.getParcelableArrayListExtra(intent, "directoryList", DirectoryData::class.java)
-        val directoryList = directoryArrayList?.toMutableList() ?: mutableListOf()
+        settings = contentProviderParser.getSettings()
 
-        directoryAdapter = DirectoryAdapter(directoryList)
+        directoryAdapter = DirectoryAdapter(settings.directories)
 
         val rvSettingsPath = findViewById<RecyclerView>(R.id.rvSettingsPaths)
         rvSettingsPath.adapter = directoryAdapter
@@ -86,36 +80,13 @@ class SettingsMenu : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
 
-        contentProviderParser.saveSettings(directoryAdapter.directoryList)
+        settings.directories = directoryAdapter.directoryList
+        // TODO re assign the other variables here before saving
+        settings.tasksTag = "#todo"
+        settings.skipDirectories = mutableListOf(".obsidian", ".trash")
+
+        contentProviderParser.saveSettings(settings)
     }
-
-    /*
-    private fun saveSettings(){
-        val fileContentList: MutableList<Map<String, String>> = mutableListOf()
-        for(directoryData in directoryAdapter.directoryList){
-            fileContentList.add(
-                mapOf("uri" to directoryData.uri.toString(), "path" to directoryData.text, "position" to directoryData.position.toString())
-            )
-        }
-
-        val fileContents = JSONArray(fileContentList).toString()
-        //val fileContentsJSONObject = JSONObject(mapOf("pathsList" to JSONArray(fileContentList)))
-        //val fileContents = fileContentsJSONObject.toString()
-
-        // this should work, but I prefer that the other one explicitly overwrites the file
-        /*
-        applicationContext.openFileOutput(settingFilename, MODE_PRIVATE).use {
-            it.write(fileContents.toByteArray(Charsets.UTF_8))
-        }
-         */
-
-        val file = File(applicationContext.filesDir, settingFilename)
-        file.createNewFile()
-        file.writeText(fileContents, Charsets.UTF_8)
-    }
-
-     */
-
 
     private fun addPath(uri: Uri?){
         // TODO get in the file system and ask them to set a directory to look in
@@ -131,10 +102,7 @@ class SettingsMenu : AppCompatActivity() {
 
         Log.d(TAG, "addPath: $uri")
 
-        // TODO investigar cual de estos o algo parecido puedo usar para remplazar el hardcoded string que tengo allá abajo
-        //Environment.getExternalStorageDirectory()
-        //Environment.DIRECTORY_DOWNLOADS
-        val path: String = uri.path.toString().replace("/tree/primary:", "")
+        val path: String = uri.path.toString().replace("${uri.scheme}:", "")
         directoryAdapter.addItem(DirectoryData(uri, path))
     }
 

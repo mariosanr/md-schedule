@@ -7,11 +7,11 @@ import android.database.Cursor
 import android.database.MatrixCursor
 import android.net.Uri
 import android.provider.BaseColumns
-import android.util.Log
 import com.stillloading.mdschedule.data.SettingsFlowData
 import com.stillloading.mdschedule.data.toSettingsData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import java.time.LocalDateTime
 
 object ScheduleProviderContract{
     const val AUTHORITY = "com.stillloading.mdschedule.provider"
@@ -19,6 +19,12 @@ object ScheduleProviderContract{
 
     const val PATH_SETTINGS = "settings"
     const val PATH_TASKS = "tasks"
+    const val PATH_LAST_UPDATED = "last_updated"
+
+
+    const val CODE_ERROR = 0
+    const val CODE_SUCCESS = 1
+    const val CODE_UPDATING = 2
 
     object SETTINGS{
         val CONTENT_URI: Uri = BASE_CONTENT_URI.buildUpon().appendPath(PATH_SETTINGS).build()
@@ -46,11 +52,18 @@ object ScheduleProviderContract{
         const val COLUMN_URI = "uri"
     }
 
+    object LAST_UPDATED{
+        val CONTENT_URI: Uri = BASE_CONTENT_URI.buildUpon().appendPath(PATH_LAST_UPDATED).build()
+
+        const val COLUMN_DATETIME = "date_time"
+    }
+
 }
 
 private val uriMatcher = UriMatcher(UriMatcher.NO_MATCH).apply {
-    addURI(ScheduleProviderContract.AUTHORITY, "settings", 1)
-    addURI(ScheduleProviderContract.AUTHORITY, "tasks", 2)
+    addURI(ScheduleProviderContract.AUTHORITY, ScheduleProviderContract.PATH_SETTINGS, 1)
+    addURI(ScheduleProviderContract.AUTHORITY, ScheduleProviderContract.PATH_TASKS, 2)
+    addURI(ScheduleProviderContract.AUTHORITY, ScheduleProviderContract.PATH_LAST_UPDATED, 3)
 }
 
 class ScheduleContentProvider : ContentProvider() {
@@ -66,6 +79,8 @@ class ScheduleContentProvider : ContentProvider() {
 
     // Preferences Data Store
     private lateinit var settingsFlowData: SettingsFlowData
+
+    private var lastUpdated: LocalDateTime? = null
 
 
     override fun onCreate(): Boolean {
@@ -99,16 +114,24 @@ class ScheduleContentProvider : ContentProvider() {
                 runBlocking(Dispatchers.IO) {
                     val cursor = MatrixCursor(arrayOf("key", "value"))
 
-                    val settingsMap = fileSystemManager.getSettings(settingsFlowData)
+                    val settingsMap = fileSystemManager.getSettingsMap(settingsFlowData)
                     settingsMap.forEach { (key, value) ->
                         cursor.addRow(arrayOf(key, value))
                     }
 
+                    // Returns the as strings. The settings that are lists are a comma separated string
                     cursor
                 }
             }
             2 -> { // tasks
                 taskDao.getAll()
+            }
+            3 -> {
+                val cursor = MatrixCursor(arrayOf(ScheduleProviderContract.LAST_UPDATED.COLUMN_DATETIME)).apply {
+                    addRow(arrayOf(lastUpdated.toString()))
+                }
+
+                cursor
             }
             else -> { // not recognized
                 throw IllegalArgumentException()
@@ -139,11 +162,11 @@ class ScheduleContentProvider : ContentProvider() {
             1 -> { // settings
                 // TODO use the values parameter
                 runBlocking(Dispatchers.IO){
-                    fileSystemManager.saveSettings(values?.toSettingsData())
+                    values?.toSettingsData()?.let { fileSystemManager.saveSettings(it) }
                 }
 
                 context?.contentResolver?.notifyChange(uri, null)
-                1
+                ScheduleProviderContract.CODE_SUCCESS
             }
             2 -> { // tasks
                 if(!updatingDB){
@@ -159,13 +182,15 @@ class ScheduleContentProvider : ContentProvider() {
                         }
                     }
                     updatingDB = false
+                    lastUpdated = LocalDateTime.now()
                     context?.contentResolver?.notifyChange(uri, null)
+                    return ScheduleProviderContract.CODE_SUCCESS
+                }else{
+                    return ScheduleProviderContract.CODE_UPDATING
                 }
-
-                1
             }
             else -> { // not recognized
-                0
+                ScheduleProviderContract.CODE_ERROR
             }
         }
     }

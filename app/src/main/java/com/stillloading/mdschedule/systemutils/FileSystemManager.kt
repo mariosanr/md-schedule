@@ -16,11 +16,8 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.take
-import kotlinx.coroutines.flow.toList
 import java.time.LocalDate
 
 class FileSystemManager(
@@ -28,15 +25,13 @@ class FileSystemManager(
 ) {
 
     companion object {
-        private val defaultSettings = SettingsData(
-            directories = setOf(),
-            tasksTag = "",
-            skipDirectories = setOf(".obsidian", ".trash")
-        )
+        private val DEFAULT_DIRECTORIES = setOf<String>()
+        private val DEFAULT_TASKS_TAG = ""
+        private val DEFAULT_SKIP_DIRECTORIES = setOf(".obsidian", ".trash")
 
-        private const val directoriesName = "directories"
-        private const val tasksTagName = "tasks_tag"
-        private const val skipDirectoriesName = "skip_directories"
+        private const val directoriesName = ScheduleProviderContract.SETTINGS.DIRECTORIES
+        private const val tasksTagName = ScheduleProviderContract.SETTINGS.TASKS_TAG
+        private const val skipDirectoriesName = ScheduleProviderContract.SETTINGS.SKIP_DIRECTORIES
 
         private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
         private val directoriesKey = stringSetPreferencesKey(directoriesName)
@@ -45,9 +40,7 @@ class FileSystemManager(
     }
 
     // FIXME Use the Preferences DataStore library instead of SharedPreferences
-    suspend fun saveSettings(settingsArg: SettingsData?) {
-        val settingsData = settingsArg ?: defaultSettings
-
+    suspend fun saveSettings(settingsData: SettingsData) {
         context.dataStore.edit { settings ->
             settings[directoriesKey] = settingsData.directories.map {
                 it.toString()
@@ -59,42 +52,17 @@ class FileSystemManager(
         }
     }
 
-        /*
-        val settings = settingsArg ?: defaultSettings
-        val sharedPreferences = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
-        val editor = sharedPreferences.edit()
-
-
-        val directories = java.util.HashSet<String>()
-        val skipDirectories = java.util.HashSet<String>()
-
-        for(directory in settings.directories){
-            directories.add(directory.toString())
-        }
-        for(directory in settings.skipDirectories){
-            skipDirectories.add(directory)
-        }
-
-
-        editor.putStringSet("directories", directories)
-        editor.putString("tasks_tag", settings.tasksTag)
-        editor.putStringSet("skip_directories", skipDirectories)
-
-        editor.apply()
-    }
-         */
-
     fun getSettingsFlow(): SettingsFlowData{
         val directoriesFlow: Flow<Set<String>> = context.dataStore.data.map { preferences ->
-            preferences[directoriesKey] ?: setOf()
+            preferences[directoriesKey] ?: DEFAULT_DIRECTORIES
         }
 
         val tasksTagFlow: Flow<String> = context.dataStore.data.map { preferences ->
-            preferences[tasksTagKey] ?: ""
+            preferences[tasksTagKey] ?: DEFAULT_TASKS_TAG
         }
 
         val skipDirectoriesFlow: Flow<Set<String>> = context.dataStore.data.map { preferences ->
-            preferences[skipDirectoriesKey] ?: setOf()
+            preferences[skipDirectoriesKey] ?: DEFAULT_SKIP_DIRECTORIES
         }
 
         return SettingsFlowData(
@@ -104,30 +72,7 @@ class FileSystemManager(
         )
     }
 
-
-        /*
-        val sharedPreferences = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
-
-
-        val directories = mutableListOf<Uri>()
-        val skipDirectories = mutableListOf<String>()
-
-        for(directory in sharedPreferences.getStringSet("directories", java.util.HashSet())!!){
-            directories.add(Uri.parse(directory))
-        }
-        for(directory in sharedPreferences.getStringSet("skip_directories", java.util.HashSet())!!){
-            skipDirectories.add(directory)
-        }
-
-        return SettingsData(
-            directories = directories,
-            tasksTag = sharedPreferences.getString("tasks_tag", "") ?: "",
-            skipDirectories = skipDirectories
-        )
-    }
-         */
-
-    suspend fun getSettings(settingsFlowData: SettingsFlowData): Map<String, String>{
+    suspend fun getSettingsMap(settingsFlowData: SettingsFlowData): Map<String, String>{
         val directories = settingsFlowData.directories.firstOrNull()?.joinToString(",") ?: ""
         val tasksTag = settingsFlowData.tasksTag.firstOrNull() ?: ""
         val skipDirectories = settingsFlowData.skipDirectories.firstOrNull()?.joinToString(",") ?: ""
@@ -140,13 +85,13 @@ class FileSystemManager(
     }
 
     suspend fun getSettingsData(settingsFlowData: SettingsFlowData): SettingsData{
-        val settings = getSettings(settingsFlowData)
+        val settings = getSettingsMap(settingsFlowData)
 
-        val directories = settings[directoriesName]!!.split(",").map {
-            Uri.parse(it)
-        }.toSet()
+        val directories = if(settings[directoriesName] != "")
+            settings[directoriesName]!!.split(",").map { Uri.parse(it) }.toSet() else setOf()
         val tasksTag = settings[tasksTagName]!!
-        val skipDirectories = settings[skipDirectoriesName]!!.split(",").toSet()
+        val skipDirectories = if(settings[skipDirectoriesName] != "")
+            settings[skipDirectoriesName]!!.split(",").toSet() else setOf()
 
         return SettingsData(
             directories = directories,
@@ -156,6 +101,10 @@ class FileSystemManager(
     }
 
     suspend fun getTasksArray(settings: SettingsData, date: String): Array<TaskEntityData> = coroutineScope {
+        if(settings.directories.isEmpty()){
+            return@coroutineScope arrayOf()
+        }
+
         val taskParser = TaskParser(context, settings)
         val tasksDeferredResult = settings.directories.map { directory ->
             async { taskParser.getTasks(LocalDate.parse(date), directory) }
@@ -165,7 +114,6 @@ class FileSystemManager(
         val dbTasks = mutableListOf<TaskEntityData>()
 
         val tasks = tasksDeferredResult.awaitAll().flatten()
-        Log.d("list of tasks", "Num of Tasks: ${tasks.size}\nTasks: $tasks")
 
         for(task in tasks){
             // map the Task to the Task Entity Data

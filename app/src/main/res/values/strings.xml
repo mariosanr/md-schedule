@@ -2,6 +2,7 @@
     <string name="app_name">Markdown Schedule</string>
     <string name="example">Example</string>
     <string name="exampleDate">Today, Dec 31, 2000</string>
+    <string name="last_updated">"Last updated: "</string>
     <string name="loading">Loading…</string>
     <string name="timeTasksTitle"><u>Schedule</u></string>
     <string name="timeTasksNone">No time-sensitive tasks were found for today.

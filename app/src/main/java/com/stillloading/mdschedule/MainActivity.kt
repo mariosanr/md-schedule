@@ -62,6 +62,8 @@ class MainActivity : AppCompatActivity() {
     private var directoryList: MutableList<DirectoryData> = mutableListOf()
 
     private lateinit var tvDate: TextView
+    private lateinit var tvLastUpdated: TextView
+
     private lateinit var linearLayoutMain: LinearLayout
     private lateinit var rvTaskList: RecyclerView
     private lateinit var rvHourList: RecyclerView
@@ -86,9 +88,12 @@ class MainActivity : AppCompatActivity() {
         }
 
         tvDate = findViewById(R.id.tvDate)
+        tvLastUpdated = findViewById(R.id.tvLastUpdated)
         linearLayoutMain = findViewById(R.id.linearLayoutMain)
         tvTimeTasksNone = findViewById(R.id.tvTimeTasksNone)
         tvNonTimeTasksNone = findViewById(R.id.tvNonTimeTasksNone)
+
+        linearLayoutMain.visibility = View.GONE
 
 
         setTodayDate()
@@ -96,11 +101,7 @@ class MainActivity : AppCompatActivity() {
         fileSystemManager = FileSystemManager(applicationContext)
         contentProviderParser = ContentProviderParser(applicationContext)
 
-        /*
-        val popupInflater: LayoutInflater = getSystemService(LAYOUT_INFLATER_SERVICE) as LayoutInflater
-        val popupView: View = popupInflater.inflate(R.layout.popup_task, null)
-        val taskPopup = TaskPopup(popupView, this)
-         */
+
         val popupBinding = PopupTaskBinding.inflate(layoutInflater)
         val taskPopup = TaskPopup(popupBinding, this)
 
@@ -133,7 +134,7 @@ class MainActivity : AppCompatActivity() {
         pbLoadingWheel = findViewById(R.id.pbLoadingWheel)
 
 
-        reloadTasks()
+        reloadTasks(update = false, firstLaunch = true)
     }
 
     override fun onStart() {
@@ -144,29 +145,18 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onRestart() {
+        super.onRestart()
+
+        reloadTasks(false)
+    }
+
     private fun setTodayDate(){
-        val formattedDate = LocalDate.now().format(DateTimeFormatter.ofPattern("MMM d, uuuu"))
+        val formattedDate = LocalDate.now().format(DateTimeFormatter.ofPattern("'Today:' MMM d, uuuu"))
         val tvDateMessage = "Today: $formattedDate"
-        tvDate.text = tvDateMessage
+        tvDate.text = formattedDate
     }
 
-    private fun loadSettings(){
-        directoryList = mutableListOf()
-
-        val file = File(applicationContext.filesDir, settingFilename)
-        if(!file.exists()) return
-
-        val directoryListString = file.readText(Charsets.UTF_8)
-        val directoryJSONArray = JSONTokener(directoryListString).nextValue()
-
-        if(directoryJSONArray is JSONArray){
-            for(i in 0..<directoryJSONArray.length()){
-                val dataObject = directoryJSONArray.getJSONObject(i)
-                directoryList.add(DirectoryData(Uri.parse(dataObject.getString("uri")), dataObject.getString("path"), dataObject.getInt("position")))
-            }
-        }
-
-    }
 
     private fun setMinMaxHours(tasksList: MutableList<TaskDisplayData>){
         val hourRegEx = Regex("^(?<hour>\\d\\d?)")
@@ -204,138 +194,13 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    // Return Pair(timeTasks, nonTimeTasks)
-    private suspend fun getTasks(uris: Set<Uri>): Pair<MutableList<TaskDisplayData>, MutableList<TaskDisplayData>> {
-        return withContext(Dispatchers.IO){
-
-            val settings = SettingsData(
-                directories = uris,
-                tasksTag = "#todo",
-                skipDirectories = setOf(".obsidian", ".trash")
-            )
-
-
-            val updateSettingsResult = applicationContext.contentResolver.update(
-                ScheduleProviderContract.SETTINGS.CONTENT_URI, settings.toContentValues(), null, null
-            )
-            Log.d(TAG, "Update Settings Result: $updateSettingsResult")
-
-
-            val today = LocalDate.now().toString()
-            val taskUpdateValues = ContentValues().apply {
-                put(ScheduleProviderContract.TASKS.DATE, today)
-            }
-            val updateTasksResult = applicationContext.contentResolver.update(
-                ScheduleProviderContract.TASKS.CONTENT_URI, taskUpdateValues, null, null
-            )
-            Log.d(TAG, "Update Tasks Result: $updateTasksResult")
-
-
-            val tasksCursor = applicationContext.contentResolver.query(
-                ScheduleProviderContract.TASKS.CONTENT_URI, null, null, null, null
-            )
-
-            val tasks = mutableListOf<Task>()
-
-            // TODO go through cursor
-            tasksCursor?.apply {
-
-                val taskColumn = getColumnIndex(ScheduleProviderContract.TASKS.COLUMN_TASK)
-                val priorityColumn = getColumnIndex(ScheduleProviderContract.TASKS.COLUMN_PRIORITY)
-                val statusColumn = getColumnIndex(ScheduleProviderContract.TASKS.COLUMN_STATUS)
-                val dueDateColumn = getColumnIndex(ScheduleProviderContract.TASKS.COLUMN_DUE_DATE)
-                val scheduledDateColumn = getColumnIndex(ScheduleProviderContract.TASKS.COLUMN_SCHEDULED_DATE)
-                val startDateColumn = getColumnIndex(ScheduleProviderContract.TASKS.COLUMN_START_DATE)
-                val evDateColumn = getColumnIndex(ScheduleProviderContract.TASKS.COLUMN_EV_DATE)
-                val evStartTimeColumn = getColumnIndex(ScheduleProviderContract.TASKS.COLUMN_EV_START_TIME)
-                val evEndTimeColumn = getColumnIndex(ScheduleProviderContract.TASKS.COLUMN_EV_END_TIME)
-                val uriColumn = getColumnIndex(ScheduleProviderContract.TASKS.COLUMN_URI)
-
-
-                while (moveToNext()){
-                    tasks.add(Task(
-                        task = getString(taskColumn),
-                        priority = TaskPriority.entries.getOrNull(getInt(priorityColumn)) ?: TaskPriority.NORMAL,
-                        status = getStringOrNull(statusColumn),
-                        dueDate = getStringOrNull(dueDateColumn),
-                        scheduledDate = getStringOrNull(scheduledDateColumn),
-                        startDate = getStringOrNull(startDateColumn),
-                        evDate = getStringOrNull(evDateColumn),
-                        evStartTime = getStringOrNull(evStartTimeColumn),
-                        evEndTime = getStringOrNull(evEndTimeColumn),
-                        uri = getStringOrNull(uriColumn)?.let { Uri.parse(it) }
-                    ))
-                }
-            }?.close() // FIXME it could be more efficient to requery the cursor instead of opening a new one every time
-
-
-            val timeTasks: MutableList<Task> = mutableListOf()
-            val nonTimeTasks: MutableList<Task> = mutableListOf()
-
-            for(task in tasks){
-                if(task.evDate == today && task.evStartTime != null){
-                    timeTasks.add(task)
-                }else{
-                    nonTimeTasks.add(task)
-                }
-            }
-
-            val taskDisplayManager = TaskDisplayManager(settings)
-
-            Pair(taskDisplayManager.getTasks(timeTasks, today), taskDisplayManager.getTasks(nonTimeTasks, today))
-        }
-    }
-    /*
-        return withContext(Dispatchers.IO){
-            val skipDirectories = listOf(".obsidian", ".trash")
-            val settings = JSONObject(mapOf(
-                "tasks_tag" to "#todo",
-                "skip_directories" to JSONArray(skipDirectories).toString()
-            ))
-
-
-            val taskParser = TaskParser(applicationContext, settings)
-            //val today = LocalDate.parse("2024-07-31")
-            val today = LocalDate.now()
-            val tasks: MutableList<Task>
-
-            val getTasksTime = measureTimeMillis { tasks = taskParser.getTasks(today, uri) }
-            Log.i(TAG, "Complete getTasks() function elapsed time: $getTasksTime ms")
-
-            val timeTasks: MutableList<Task> = mutableListOf()
-            val nonTimeTasks: MutableList<Task> = mutableListOf()
-
-            for(task in tasks){
-                if(task.evDate == today.toString() && task.evStartTime != null){
-                    timeTasks.add(task)
-                }else{
-                    nonTimeTasks.add(task)
-                }
-            }
-
-            val taskDisplayManager = TaskDisplayManager(settings)
-            val todayString = today.toString()
-
-            Pair(taskDisplayManager.getTasks(timeTasks, todayString), taskDisplayManager.getTasks(nonTimeTasks, todayString))
-        }
-    }
-     */
-
-    private fun reloadTasks(){
+    private fun reloadTasks(update: Boolean, firstLaunch: Boolean = false){
         MainScope().launch {
             pbLoadingWheel.visibility = View.VISIBLE
             linearLayoutMain.alpha = 0.4f
 
-            setTodayDate()
-            loadSettings()
 
-            val settings = SettingsData(
-                directories = directoryList.mapNotNull { it.uri }.toSet(),
-                tasksTag = "#todo",
-                skipDirectories = setOf(".obsidian", ".trash")
-            )
-
-            val (timeTasks, nonTimeTasks) = contentProviderParser.getTasks(settings, true)
+            val (timeTasks, nonTimeTasks) = contentProviderParser.getTasks(update) ?: return@launch
 
 
             if (timeTasks.size > 0) {
@@ -366,8 +231,25 @@ class MainActivity : AppCompatActivity() {
             timeTaskManager.setTimeTasks(timeTasks, minHour, maxHour)
 
 
+            setTodayDate()
+
+            val lastUpdated = contentProviderParser.getLastUpdated()
+            if(lastUpdated != null){
+                val dateTimeFormatter = DateTimeFormatter.ofPattern("'Last updated at' HH:mm")
+                tvLastUpdated.text = lastUpdated.format(dateTimeFormatter)
+                tvLastUpdated.visibility = View.VISIBLE
+            }else{
+                tvLastUpdated.visibility = View.GONE
+            }
+
+            linearLayoutMain.visibility = View.VISIBLE
             linearLayoutMain.alpha = 1.0f
             pbLoadingWheel.visibility = View.GONE
+
+
+            if(firstLaunch){
+                reloadTasks(true, firstLaunch = false)
+            }
         }
     }
 
@@ -382,15 +264,11 @@ class MainActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when(item.itemId){
             R.id.settings_option -> {
-                loadSettings()
-                val arr = ArrayList<DirectoryData>(directoryList)
-                startActivity(Intent(this, SettingsMenu::class.java).apply {
-                    putExtra("directoryList", arr)
-                })
+                startActivity(Intent(this, SettingsMenu::class.java))
                 true
             }
             R.id.reload_option -> {
-                reloadTasks()
+                reloadTasks(true)
                 true
             }
             else -> super.onOptionsItemSelected(item)

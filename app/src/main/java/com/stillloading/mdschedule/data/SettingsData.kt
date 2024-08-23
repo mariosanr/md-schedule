@@ -10,16 +10,6 @@ data class SettingsData(
     val skipDirectories: Set<String>
 )
 
-fun SettingsData.toContentValues(): ContentValues{
-    return ContentValues().apply {
-        put(ScheduleProviderContract.SETTINGS.DIRECTORIES, directories.joinToString(",") {
-            it.toString()
-        })
-        put(ScheduleProviderContract.SETTINGS.TASKS_TAG, tasksTag)
-        put(ScheduleProviderContract.SETTINGS.SKIP_DIRECTORIES, skipDirectories.joinToString(","))
-    }
-}
-
 fun ContentValues.toSettingsData(): SettingsData{
     return SettingsData(
         directories = getAsString(ScheduleProviderContract.SETTINGS.DIRECTORIES).split(",").map {
