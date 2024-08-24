@@ -12,6 +12,7 @@ import com.stillloading.mdschedule.data.SettingsDisplayData
 import com.stillloading.mdschedule.data.Task
 import com.stillloading.mdschedule.data.TaskDisplayData
 import com.stillloading.mdschedule.data.TaskPriority
+import com.stillloading.mdschedule.data.TaskWidgetDisplayData
 import com.stillloading.mdschedule.data.toContentValues
 import com.stillloading.mdschedule.data.toSettingsData
 import com.stillloading.mdschedule.taskutils.TaskDisplayManager
@@ -78,6 +79,29 @@ class ContentProviderParser(
     }
 
 
+    suspend fun getWidgetTasks(update: Boolean = false): ArrayList<TaskWidgetDisplayData>?{
+        return withContext(Dispatchers.IO){
+
+            val today = LocalDate.now().toString()
+
+            if(update){
+                updateTasks(today) ?: return@withContext null
+            }
+
+            val tasks = getTasksList()
+
+            // TODO order them
+
+
+
+            val settings = getSettings().toSettingsData()
+            val taskDisplayManager = TaskDisplayManager(settings)
+
+            taskDisplayManager.getWidgetTasks(tasks, today)
+        }
+    }
+
+
     // Return Pair(timeTasks, nonTimeTasks)
     suspend fun getTasks(update: Boolean = false): Pair<MutableList<TaskDisplayData>, MutableList<TaskDisplayData>>? {
         return withContext(Dispatchers.IO){
@@ -85,57 +109,10 @@ class ContentProviderParser(
             val today = LocalDate.now().toString()
 
             if(update){
-                val taskUpdateValues = ContentValues().apply {
-                    put(ScheduleProviderContract.TASKS.DATE, today)
-                }
-
-                val responseCode = context.contentResolver.update(
-                    ScheduleProviderContract.TASKS.CONTENT_URI, taskUpdateValues, null, null
-                )
-                if(responseCode == ScheduleProviderContract.CODE_UPDATING){
-                    withContext(Dispatchers.Main){
-                        Toast.makeText(context, "Already refreshing", Toast.LENGTH_SHORT).show()
-                    }
-                    return@withContext null
-                }
+                updateTasks(today) ?: return@withContext null
             }
 
-            val tasksCursor = context.contentResolver.query(
-                ScheduleProviderContract.TASKS.CONTENT_URI, null, null, null, null
-            )
-
-            val tasks = mutableListOf<Task>()
-
-            tasksCursor?.apply {
-
-                val taskColumn = getColumnIndex(ScheduleProviderContract.TASKS.COLUMN_TASK)
-                val priorityColumn = getColumnIndex(ScheduleProviderContract.TASKS.COLUMN_PRIORITY)
-                val statusColumn = getColumnIndex(ScheduleProviderContract.TASKS.COLUMN_STATUS)
-                val dueDateColumn = getColumnIndex(ScheduleProviderContract.TASKS.COLUMN_DUE_DATE)
-                val scheduledDateColumn = getColumnIndex(ScheduleProviderContract.TASKS.COLUMN_SCHEDULED_DATE)
-                val startDateColumn = getColumnIndex(ScheduleProviderContract.TASKS.COLUMN_START_DATE)
-                val evDateColumn = getColumnIndex(ScheduleProviderContract.TASKS.COLUMN_EV_DATE)
-                val evStartTimeColumn = getColumnIndex(ScheduleProviderContract.TASKS.COLUMN_EV_START_TIME)
-                val evEndTimeColumn = getColumnIndex(ScheduleProviderContract.TASKS.COLUMN_EV_END_TIME)
-                val uriColumn = getColumnIndex(ScheduleProviderContract.TASKS.COLUMN_URI)
-
-
-                while (moveToNext()){
-                    tasks.add(Task(
-                        task = getString(taskColumn),
-                        priority = TaskPriority.entries.getOrNull(getInt(priorityColumn)) ?: TaskPriority.NORMAL,
-                        status = getStringOrNull(statusColumn),
-                        dueDate = getStringOrNull(dueDateColumn),
-                        scheduledDate = getStringOrNull(scheduledDateColumn),
-                        startDate = getStringOrNull(startDateColumn),
-                        evDate = getStringOrNull(evDateColumn),
-                        evStartTime = getStringOrNull(evStartTimeColumn),
-                        evEndTime = getStringOrNull(evEndTimeColumn),
-                        uri = getStringOrNull(uriColumn)?.let { Uri.parse(it) }
-                    ))
-                }
-            }?.close()
-
+            val tasks = getTasksList()
 
             // FIXME It would be more efficient if the content provider returned the task display data
             //  Because here we need to get the settings again, while the content provider already has them loaded.
@@ -159,6 +136,68 @@ class ContentProviderParser(
         }
     }
 
+
+    // FIXME do this through Work Manager instead to be sure it finishes.
+    suspend fun updateTasks(today: String): Int?{
+        val taskUpdateValues = ContentValues().apply {
+            put(ScheduleProviderContract.TASKS.DATE, today)
+        }
+
+        val responseCode = context.contentResolver.update(
+            ScheduleProviderContract.TASKS.CONTENT_URI, taskUpdateValues, null, null
+        )
+        if(responseCode == ScheduleProviderContract.CODE_UPDATING){
+            withContext(Dispatchers.Main){
+                Toast.makeText(context, "Already refreshing", Toast.LENGTH_SHORT).show()
+            }
+            return null
+        }
+        return ScheduleProviderContract.CODE_SUCCESS
+    }
+
+
+    private fun getTasksList(): MutableList<Task>{
+        val tasksCursor = context.contentResolver.query(
+            ScheduleProviderContract.TASKS.CONTENT_URI, null, null, null, null
+        )
+
+        val tasks = mutableListOf<Task>()
+
+        tasksCursor?.apply {
+
+            val taskColumn = getColumnIndex(ScheduleProviderContract.TASKS.COLUMN_TASK)
+            val priorityColumn = getColumnIndex(ScheduleProviderContract.TASKS.COLUMN_PRIORITY)
+            val statusColumn = getColumnIndex(ScheduleProviderContract.TASKS.COLUMN_STATUS)
+            val dueDateColumn = getColumnIndex(ScheduleProviderContract.TASKS.COLUMN_DUE_DATE)
+            val scheduledDateColumn = getColumnIndex(ScheduleProviderContract.TASKS.COLUMN_SCHEDULED_DATE)
+            val startDateColumn = getColumnIndex(ScheduleProviderContract.TASKS.COLUMN_START_DATE)
+            val evDateColumn = getColumnIndex(ScheduleProviderContract.TASKS.COLUMN_EV_DATE)
+            val evStartTimeColumn = getColumnIndex(ScheduleProviderContract.TASKS.COLUMN_EV_START_TIME)
+            val evEndTimeColumn = getColumnIndex(ScheduleProviderContract.TASKS.COLUMN_EV_END_TIME)
+            val uriColumn = getColumnIndex(ScheduleProviderContract.TASKS.COLUMN_URI)
+
+
+            while (moveToNext()){
+                tasks.add(Task(
+                    task = getString(taskColumn),
+                    priority = TaskPriority.entries.getOrNull(getInt(priorityColumn)) ?: TaskPriority.NORMAL,
+                    status = getStringOrNull(statusColumn),
+                    dueDate = getStringOrNull(dueDateColumn),
+                    scheduledDate = getStringOrNull(scheduledDateColumn),
+                    startDate = getStringOrNull(startDateColumn),
+                    evDate = getStringOrNull(evDateColumn),
+                    evStartTime = getStringOrNull(evStartTimeColumn),
+                    evEndTime = getStringOrNull(evEndTimeColumn),
+                    uri = getStringOrNull(uriColumn)?.let { Uri.parse(it) }
+                ))
+            }
+        }?.close()
+
+        return tasks
+    }
+
+
+
     fun getLastUpdated(): LocalDateTime?{
         var lastUpdated: LocalDateTime? = null
         context.contentResolver.query(
@@ -178,6 +217,22 @@ class ContentProviderParser(
         }?.close()
 
         return lastUpdated
+    }
+
+    fun getIsUpdatingTasks(): Boolean{
+        var isUpdating = false
+
+        context.contentResolver.query(
+            ScheduleProviderContract.UPDATING_TASKS.CONTENT_URI, null, null, null, null
+        )?.apply {
+            val isUpdatingColumn = getColumnIndex(ScheduleProviderContract.UPDATING_TASKS.COLUMN_UPDATING)
+
+            if(moveToFirst()){
+                isUpdating = getStringOrNull(isUpdatingColumn).toBoolean()
+            }
+        }?.close()
+
+        return isUpdating
     }
 
 }

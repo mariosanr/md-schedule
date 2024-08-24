@@ -4,6 +4,7 @@ import com.stillloading.mdschedule.data.SettingsData
 import com.stillloading.mdschedule.data.Task
 import com.stillloading.mdschedule.data.TaskDisplayData
 import com.stillloading.mdschedule.data.TaskPriority
+import com.stillloading.mdschedule.data.TaskWidgetDisplayData
 import org.json.JSONObject
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -17,6 +18,37 @@ class TaskDisplayManager(private val settings: SettingsData) {
 
     private val dateFormatter = DateTimeFormatter.ofPattern("MMM d")
     private val dateFormatterYear = DateTimeFormatter.ofPattern("MMM d, uuuu")
+
+    fun getWidgetTasks(tasks: MutableList<Task>, date: String): ArrayList<TaskWidgetDisplayData>{
+        val displayTasks: ArrayList<TaskWidgetDisplayData> = arrayListOf()
+
+        for(task in tasks){
+            displayTasks.add(
+                TaskWidgetDisplayData(
+                    task = getParsedTaskText(task.task),
+                    priority = getPrioritySymbol(task.priority),
+                    summaryText = getWidgetSummaryText(task, date),
+                )
+            )
+        }
+
+        return displayTasks
+    }
+
+    private fun getWidgetSummaryText(task: Task, date: String): String{
+        return when{
+            task.evDate == date && task.evStartTime != null && task.evEndTime != null -> {
+                "${task.evStartTime} - ${task.evEndTime}"
+            }
+            task.evDate == date && task.evStartTime != null -> {
+                task.evStartTime
+            }
+            else -> {
+                // if it is not an event or it is not today
+                getTaskSummaryText(task, date)
+            }
+        }
+    }
 
     fun getTasks(tasks: MutableList<Task>, date: String): MutableList<TaskDisplayData>{
         val displayTasks: MutableList<TaskDisplayData> = mutableListOf()

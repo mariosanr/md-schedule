@@ -21,6 +21,7 @@ object ScheduleProviderContract{
     const val PATH_SETTINGS = "settings"
     const val PATH_TASKS = "tasks"
     const val PATH_LAST_UPDATED = "last_updated"
+    const val PATH_UPDATING = "updating"
 
 
     const val CODE_ERROR = 0
@@ -59,12 +60,19 @@ object ScheduleProviderContract{
         const val COLUMN_DATETIME = "date_time"
     }
 
+    object UPDATING_TASKS{
+        val CONTENT_URI: Uri = BASE_CONTENT_URI.buildUpon().appendPath(PATH_UPDATING).build()
+
+        const val COLUMN_UPDATING = "is_updating"
+    }
+
 }
 
 private val uriMatcher = UriMatcher(UriMatcher.NO_MATCH).apply {
     addURI(ScheduleProviderContract.AUTHORITY, ScheduleProviderContract.PATH_SETTINGS, 1)
     addURI(ScheduleProviderContract.AUTHORITY, ScheduleProviderContract.PATH_TASKS, 2)
     addURI(ScheduleProviderContract.AUTHORITY, ScheduleProviderContract.PATH_LAST_UPDATED, 3)
+    addURI(ScheduleProviderContract.AUTHORITY, ScheduleProviderContract.PATH_UPDATING, 4)
 }
 
 class ScheduleContentProvider : ContentProvider() {
@@ -136,6 +144,13 @@ class ScheduleContentProvider : ContentProvider() {
                     cursor
                 }
             }
+            4 -> {
+                val cursor = MatrixCursor(arrayOf(ScheduleProviderContract.UPDATING_TASKS.COLUMN_UPDATING)).apply {
+                    addRow(arrayOf(updatingDB.toString()))
+                }
+
+                cursor
+            }
             else -> { // not recognized
                 throw IllegalArgumentException()
             }
@@ -163,7 +178,6 @@ class ScheduleContentProvider : ContentProvider() {
         context?.enforceCallingOrSelfPermission("com.stillloading.mdschedule.provider.WRITE_PROVIDER", "Write permission denied")
         return when(uriMatcher.match(uri)){
             1 -> { // settings
-                // TODO use the values parameter
                 runBlocking(Dispatchers.IO){
                     values?.toSettingsData()?.let { fileSystemManager.saveSettings(it) }
                 }
@@ -174,18 +188,26 @@ class ScheduleContentProvider : ContentProvider() {
             2 -> { // tasks
                 if(!updatingDB){
                     updatingDB = true
-                    taskDao.deleteAll()
+                    context?.contentResolver?.notifyChange(ScheduleProviderContract.UPDATING_TASKS.CONTENT_URI, null)
+
 
                     runBlocking(Dispatchers.IO) {
                         val date = values?.getAsString(ScheduleProviderContract.TASKS.DATE)
                         if(date != null){
                             val settings = fileSystemManager.getSettingsData(settingsFlowData)
 
-                            taskDao.insertAll(*fileSystemManager.getTasksArray(settings, date))
+                            val tasksArray = fileSystemManager.getTasksArray(settings, date)
+
+                            // wait for the operation to complete to clear the database
+                            taskDao.deleteAll()
+
+                            taskDao.insertAll(*tasksArray)
                             fileSystemManager.saveLastUpdated(LocalDateTime.now())
                         }
                     }
                     updatingDB = false
+                    context?.contentResolver?.notifyChange(ScheduleProviderContract.UPDATING_TASKS.CONTENT_URI, null)
+
                     context?.contentResolver?.notifyChange(uri, null)
                     return ScheduleProviderContract.CODE_SUCCESS
                 }else{

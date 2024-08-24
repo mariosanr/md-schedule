@@ -1,9 +1,7 @@
 package com.stillloading.mdschedule
 
 import android.annotation.SuppressLint
-import android.content.ContentValues
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
@@ -17,34 +15,22 @@ import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.content.res.AppCompatResources
-import androidx.core.database.getStringOrNull
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.stillloading.mdschedule.data.DirectoryData
-import com.stillloading.mdschedule.data.SettingsData
-import com.stillloading.mdschedule.data.Task
 import com.stillloading.mdschedule.data.TaskDisplayData
-import com.stillloading.mdschedule.data.TaskPriority
-import com.stillloading.mdschedule.data.toContentValues
 import com.stillloading.mdschedule.databinding.PopupTaskBinding
 import com.stillloading.mdschedule.systemutils.ContentProviderParser
 import com.stillloading.mdschedule.systemutils.FileSystemManager
-import com.stillloading.mdschedule.systemutils.ScheduleProviderContract
 import com.stillloading.mdschedule.taskutils.DayViewHourAdapter
 import com.stillloading.mdschedule.taskutils.NonTimeTaskAdapter
-import com.stillloading.mdschedule.taskutils.TaskDisplayManager
 import com.stillloading.mdschedule.taskutils.TaskPopup
 import com.stillloading.mdschedule.taskutils.TimeTaskManager
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import org.json.JSONArray
-import org.json.JSONTokener
-import java.io.File
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -57,9 +43,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var timeTaskManager: TimeTaskManager
     private lateinit var fileSystemManager: FileSystemManager
     private lateinit var contentProviderParser: ContentProviderParser
-
-    private val settingFilename = "paths_settings"
-    private var directoryList: MutableList<DirectoryData> = mutableListOf()
 
     private lateinit var tvDate: TextView
     private lateinit var tvLastUpdated: TextView
@@ -88,6 +71,7 @@ class MainActivity : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
+
 
         tvDate = findViewById(R.id.tvDate)
         tvLastUpdated = findViewById(R.id.tvLastUpdated)
@@ -157,7 +141,6 @@ class MainActivity : AppCompatActivity() {
 
     private fun setTodayDate(){
         val formattedDate = LocalDate.now().format(DateTimeFormatter.ofPattern("'Today:' MMM d, uuuu"))
-        val tvDateMessage = "Today: $formattedDate"
         tvDate.text = formattedDate
     }
 
@@ -205,7 +188,15 @@ class MainActivity : AppCompatActivity() {
             updatingTasks = true
 
 
-            val (timeTasks, nonTimeTasks) = contentProviderParser.getTasks(update) ?: return@launch
+            val (timeTasks, nonTimeTasks) = contentProviderParser.getTasks(update) ?: run {
+                pbLoadingWheel.visibility = View.GONE
+                linearLayoutMain.alpha = 1.0f
+                updatingTasks = false
+
+                return@launch
+            }
+
+
 
 
             if (timeTasks.size > 0) {

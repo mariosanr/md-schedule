@@ -44,9 +44,9 @@ class SettingsMenu : AppCompatActivity() {
             insets
         }
 
-
         val actionBar: ActionBar? = supportActionBar
         actionBar?.setDisplayHomeAsUpEnabled(true)
+
 
         contentProviderParser = ContentProviderParser(applicationContext)
 

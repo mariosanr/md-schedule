@@ -17,7 +17,7 @@
         android:paddingStart="10dp"
         android:paddingTop="5dp"
         android:text="11:00 - 12:00"
-        android:textSize="14sp"
+        android:textSize="12sp"
         android:textColor="@color/secondary_unchecked_text"
         android:textStyle="italic|bold"
         tools:ignore="RtlSymmetry" />
@@ -30,7 +30,7 @@
         android:paddingHorizontal="8dp"
         android:paddingTop="5dp"
         android:text="🔺"
-        android:textSize="18sp"
+        android:textSize="14sp"
         />
 
 
@@ -42,9 +42,9 @@
         android:layout_below="@+id/tvWidgetTaskSummary"
         android:text="@string/example"
         android:textColor="@color/unchecked_text"
-        android:textSize="@dimen/task_text_size"
+        android:textSize="16sp"
         android:paddingTop="2dp"
-        android:paddingBottom="8dp"
+        android:paddingBottom="4dp"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
         />
