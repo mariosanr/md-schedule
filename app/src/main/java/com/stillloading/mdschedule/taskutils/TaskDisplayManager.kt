@@ -5,7 +5,6 @@ import com.stillloading.mdschedule.data.Task
 import com.stillloading.mdschedule.data.TaskDisplayData
 import com.stillloading.mdschedule.data.TaskPriority
 import com.stillloading.mdschedule.data.TaskWidgetDisplayData
-import org.json.JSONObject
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -13,14 +12,52 @@ class TaskDisplayManager(private val settings: SettingsData) {
 
     private val parseTextRegEx = Regex("^\\s*(?:- \\[.]|-)\\s+(?:\\d{2}:\\d{2}\\s*-\\s*\\d{2}:\\d{2})?(?<text>.*)")
     private val parseTaskPluginRegEx = Regex("[📅⏳🛫✅❌]\\s*\\d{4}-\\d{2}-\\d{2}")
-    private val parseTaskTimeRegEx = Regex("@(?:\\s*\\d{4}-\\d{2}-\\d{2})?\\s*\\d\\d?:\\d{2}(?:\\s*-\\s*\\d\\d?:\\d{2})?")
     private val prioritySymbolsRegEx = Regex("[🔺⏫🔼🔽⏬]")
+    // It will match anything that has a @, so I need to check in code after if at least one of the groups matched
+    private val parseTaskEventRegEx = Regex("@(\\s*\\d{4}-\\d{2}-\\d{2})?(\\s*\\d\\d?:\\d{2})?(\\s*-\\s*\\d\\d?:\\d{2})?")
 
     private val dateFormatter = DateTimeFormatter.ofPattern("MMM d")
     private val dateFormatterYear = DateTimeFormatter.ofPattern("MMM d, uuuu")
 
-    fun getWidgetTasks(tasks: MutableList<Task>, date: String): ArrayList<TaskWidgetDisplayData>{
-        val displayTasks: ArrayList<TaskWidgetDisplayData> = arrayListOf()
+    fun getWidgetTasks(tasks: MutableList<Task>, date: String): MutableList<TaskWidgetDisplayData>{
+        // First order the tasks
+        // Order of task groups: Time tasks > Non time tasks > Day Planner Tasks
+        // Each task group is ordered by priority
+        // Time tasks are ordered by lowest startTime > lowest endTime
+        // Checked tasks go to the bottom
+
+        val getTimeRegEx = Regex("^(?<hour>\\d\\d?):(?<minutes>\\d{2})")
+
+        tasks.sortWith(compareBy(
+            {getIsChecked(it.status)},
+            {it.isDayPlanner},
+            {it.evStartTime == null},
+            {-it.priority.ordinal},
+            { task ->
+                val match = task.evStartTime?.let { evTime ->
+                    getTimeRegEx.find(evTime)
+                }
+                val hour: Int = match?.groups?.get("hour")?.value?.toIntOrNull() ?: 0
+                val minutes: Int = match?.groups?.get("minutes")?.value?.toIntOrNull() ?: 0
+
+                val startTime: Float = hour + (minutes / 60f)
+                startTime
+            },
+            { task ->
+                val match = task.evEndTime?.let { evTime ->
+                    getTimeRegEx.find(evTime)
+                }
+                val hour: Int = match?.groups?.get("hour")?.value?.toIntOrNull() ?: 0
+                val minutes: Int = match?.groups?.get("minutes")?.value?.toIntOrNull() ?: 0
+
+                val endTime: Float = hour + (minutes / 60f)
+                endTime
+            }
+        )
+        )
+
+        // create the display tasks from ordered tasks list
+        val displayTasks: MutableList<TaskWidgetDisplayData> = mutableListOf()
 
         for(task in tasks){
             displayTasks.add(
@@ -28,6 +65,7 @@ class TaskDisplayManager(private val settings: SettingsData) {
                     task = getParsedTaskText(task.task),
                     priority = getPrioritySymbol(task.priority),
                     summaryText = getWidgetSummaryText(task, date),
+                    isChecked = getIsChecked(task.status)
                 )
             )
         }
@@ -51,6 +89,9 @@ class TaskDisplayManager(private val settings: SettingsData) {
     }
 
     fun getTasks(tasks: MutableList<Task>, date: String): MutableList<TaskDisplayData>{
+        // First order tasks to make Day Planner Tasks move to the left to make it more consistent between days
+        tasks.sortBy { !it.isDayPlanner }
+
         val displayTasks: MutableList<TaskDisplayData> = mutableListOf()
 
         for(task in tasks){
@@ -68,7 +109,7 @@ class TaskDisplayManager(private val settings: SettingsData) {
                 evStartTime = task.evStartTime,
                 evEndTime = task.evEndTime,
                 evDateTimeString = getEventDateTimeString(task.evDate, task.evStartTime, task.evEndTime, date),
-                isChecked = task.status == "x",
+                isChecked = getIsChecked(task.status),
                 evIsToday = date == task.evDate,
                 priorityNumber = task.priority.ordinal,
             )
@@ -81,9 +122,25 @@ class TaskDisplayManager(private val settings: SettingsData) {
     private fun getParsedTaskText(task: String): String{
         var text: String = parseTextRegEx.find(task)?.groups?.get("text")?.value ?: ""
         text = text.replace(parseTaskPluginRegEx, "")
-        text = text.replace(parseTaskTimeRegEx, "")
         text = text.replace(prioritySymbolsRegEx, "")
         text = text.replace(settings.tasksTag, "")
+
+        // check if at least one of the groups after the symbol @ matched
+        val eventMatch = parseTaskEventRegEx.find(text)
+        if (eventMatch != null){
+            var hasMatch = false
+            for(i in 1..<eventMatch.groupValues.size){
+                if(eventMatch.groupValues[i].isNotEmpty()){
+                    hasMatch = true
+                    break
+                }
+            }
+            if(hasMatch){
+                text = text.replace(eventMatch.groupValues[0], "")
+            }
+        }
+
+
         text = text.trim()
 
         return text
@@ -95,6 +152,7 @@ class TaskDisplayManager(private val settings: SettingsData) {
         return when{
             task.dueDate == dateString -> "Due today"
             task.startDate == dateString -> "Starts today"
+            task.evDate == dateString -> "Event is today"
             task.dueDate != null -> {
                 val parsedDueDate = LocalDate.parse(task.dueDate)
                 val formattedDate = if(date.year == parsedDueDate.year)
@@ -107,7 +165,7 @@ class TaskDisplayManager(private val settings: SettingsData) {
                     parsedStartDate.format(dateFormatter) else parsedStartDate.format(dateFormatterYear)
                 "Starts $formattedDate"
             }
-            task.evDate != null && task.evDate != dateString -> {
+            task.evDate != null -> {
                 val parsedEvDate = LocalDate.parse(task.evDate)
                 val formattedDate = if(date.year == parsedEvDate.year)
                     parsedEvDate.format(dateFormatter) else parsedEvDate.format(dateFormatterYear)
@@ -167,12 +225,18 @@ class TaskDisplayManager(private val settings: SettingsData) {
 
         return if (evDate == null){
             ""
+        }else if(evStartTime == null){
+            "Event has no set time"
         }else if(evDate == today){
             if(evEndTime != null) "Event lasts from $evStartTime to $evEndTime" else "Event starts at $evStartTime"
         }else{
             if(evEndTime != null) "Event lasts from $evStartTime to $evEndTime on $evDateFormatted"
             else "Event starts on $evDateFormatted at $evStartTime"
         }
+    }
+
+    private fun getIsChecked(status: String?): Boolean{
+        return status == "x"
     }
 
 

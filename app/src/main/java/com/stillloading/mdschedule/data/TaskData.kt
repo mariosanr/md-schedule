@@ -16,7 +16,17 @@ data class Task (
     val evDate: String? = null,
     val evStartTime: String? = null,
     val evEndTime: String? = null,
+    val isDayPlanner: Boolean = false,
     val uri: Uri? = null,
+)
+
+data class TaskDates (
+    var dueDate: String? = null,
+    var scheduledDate: String? = null,
+    var startDate: String? = null,
+    var evDate: String? = null,
+    var evStartTime: String? = null,
+    var evEndTime: String? = null
 )
 
 data class UnParsedTask(

@@ -3,6 +3,7 @@ package com.stillloading.mdschedule.widgetutils
 import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
+import android.graphics.Paint
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -26,7 +27,7 @@ class TaskRemoteViewsFactory(private val context: Context, intent: Intent?)
     : RemoteViewsService.RemoteViewsFactory{
 
     private val TAG = "MarkdownScheduleWidget"
-    private var tasks: List<TaskWidgetDisplayData> = listOf()
+    private val tasks: MutableList<TaskWidgetDisplayData> = mutableListOf()
 
     private var contentProviderParser: ContentProviderParser = ContentProviderParser(context = context) // already is appContext
 
@@ -42,7 +43,6 @@ class TaskRemoteViewsFactory(private val context: Context, intent: Intent?)
         runBlocking(Dispatchers.Main) {
             Log.i(TAG, "On Data Set Changed")
 
-            // TODO toggle the widget loading wheel
             val isUpdatingTasks = contentProviderParser.getIsUpdatingTasks()
 
             // make references to get the widget remote view
@@ -59,7 +59,10 @@ class TaskRemoteViewsFactory(private val context: Context, intent: Intent?)
                 }
             }
 
-            tasks = contentProviderParser.getWidgetTasks(update = false) ?: tasks
+            contentProviderParser.getWidgetTasks().let { newList ->
+                tasks.clear()
+                tasks.addAll(newList)
+            }
 
             appWidgetManager.partiallyUpdateAppWidget(widgetId, remoteView)
 
@@ -73,10 +76,11 @@ class TaskRemoteViewsFactory(private val context: Context, intent: Intent?)
     // TODO MAYBE open the app with the popup of the task on click
     override fun getViewAt(position: Int): RemoteViews {
         if(count == 0){
-            tasks = listOf(TaskWidgetDisplayData(
+            tasks.add(TaskWidgetDisplayData(
                 task = "Error. PLease refresh or delete widget if the error persists",
                 priority = "",
-                summaryText = ""
+                summaryText = "",
+                isChecked = false
             ))
         }
 
@@ -85,6 +89,17 @@ class TaskRemoteViewsFactory(private val context: Context, intent: Intent?)
         view.setTextViewText(R.id.tvWidgetTaskSummary, tasks[position].summaryText)
         view.setTextViewText(R.id.tvPriority, tasks[position].priority)
         view.setTextViewText(R.id.tvTask, tasks[position].task)
+
+        // strike through text that is checked
+        if(tasks[position].isChecked){
+            view.setTextColor(R.id.tvTask, context.getColor(R.color.checked_text))
+            view.setTextColor(R.id.tvWidgetTaskSummary, context.getColor(R.color.checked_text))
+            view.setInt(R.id.tvTask, "setPaintFlags", Paint.STRIKE_THRU_TEXT_FLAG or Paint.ANTI_ALIAS_FLAG)
+        }else{
+            view.setTextColor(R.id.tvTask, context.getColor(R.color.unchecked_text))
+            view.setTextColor(R.id.tvWidgetTaskSummary, context.getColor(R.color.unchecked_text))
+            view.setInt(R.id.tvTask, "setPaintFlags", Paint.ANTI_ALIAS_FLAG)
+        }
 
         val fillInIntent = Intent().apply {
             Bundle().also { extras ->

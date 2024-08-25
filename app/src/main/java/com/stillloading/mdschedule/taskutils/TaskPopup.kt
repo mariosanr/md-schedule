@@ -37,8 +37,8 @@ class TaskPopup(private val popupBinding: PopupTaskBinding, private val context:
 
             if(task.evDate != "N/A"){
                 val evDateString = "Event: ${task.evDate}"
-                val evTimeString = if(task.evEndTime != null)
-                    "${task.evStartTime} - ${task.evEndTime}" else task.evStartTime.toString()
+                val evTimeString = if(task.evStartTime != null && task.evEndTime != null)
+                    "${task.evStartTime} - ${task.evEndTime}" else task.evStartTime ?: ""
                 tvEvDate.text = evDateString
                 tvEvTime.text = evTimeString
                 tvEvDateTime.text = task.evDateTimeString

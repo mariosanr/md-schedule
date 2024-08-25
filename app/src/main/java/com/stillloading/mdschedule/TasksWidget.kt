@@ -79,6 +79,10 @@ class TasksWidget : AppWidgetProvider() {
 
         }
 
+        // TODO test if the widget update functionality is necessary.
+        // if the bugs from updating directly from the widget continue I can disable the function and
+        // make them enter the app to update the tasks. The widget does not necessarily need to be able to update the data
+        // since it updates on its own when new data is available.
         context.applicationContext.contentResolver.registerContentObserver(
             ScheduleProviderContract.UPDATING_TASKS.CONTENT_URI,
             false,
@@ -109,12 +113,6 @@ class TasksWidget : AppWidgetProvider() {
             // start the app
             val startIntent: Intent? = context.packageManager.getLaunchIntentForPackage(context.packageName)
             startIntent?.let {
-                it.setFlags(
-                    Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or
-                    Intent.FLAG_ACTIVITY_NEW_TASK or
-                    Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
-                )
-
                 context.startActivity(it)
             }
         }

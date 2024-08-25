@@ -6,6 +6,10 @@ import android.net.Uri
 import android.util.Log
 import android.widget.Toast
 import androidx.core.database.getStringOrNull
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.OutOfQuotaPolicy
+import androidx.work.WorkManager
+import androidx.work.WorkRequest
 import com.stillloading.mdschedule.data.DirectoryData
 import com.stillloading.mdschedule.data.SettingsData
 import com.stillloading.mdschedule.data.SettingsDisplayData
@@ -79,20 +83,12 @@ class ContentProviderParser(
     }
 
 
-    suspend fun getWidgetTasks(update: Boolean = false): ArrayList<TaskWidgetDisplayData>?{
+    suspend fun getWidgetTasks(): MutableList<TaskWidgetDisplayData>{
         return withContext(Dispatchers.IO){
 
             val today = LocalDate.now().toString()
 
-            if(update){
-                updateTasks(today) ?: return@withContext null
-            }
-
             val tasks = getTasksList()
-
-            // TODO order them
-
-
 
             val settings = getSettings().toSettingsData()
             val taskDisplayManager = TaskDisplayManager(settings)
@@ -114,9 +110,6 @@ class ContentProviderParser(
 
             val tasks = getTasksList()
 
-            // FIXME It would be more efficient if the content provider returned the task display data
-            //  Because here we need to get the settings again, while the content provider already has them loaded.
-            //  This is unnecesary if that change is made
             val timeTasks: MutableList<Task> = mutableListOf()
             val nonTimeTasks: MutableList<Task> = mutableListOf()
 
@@ -138,9 +131,9 @@ class ContentProviderParser(
 
 
     // FIXME do this through Work Manager instead to be sure it finishes.
-    suspend fun updateTasks(today: String): Int?{
+    suspend fun updateTasks(date: String): Int?{
         val taskUpdateValues = ContentValues().apply {
-            put(ScheduleProviderContract.TASKS.DATE, today)
+            put(ScheduleProviderContract.TASKS.DATE, date)
         }
 
         val responseCode = context.contentResolver.update(
@@ -165,6 +158,8 @@ class ContentProviderParser(
 
         tasksCursor?.apply {
 
+            //val idColumn = getColumnIndex(ScheduleProviderContract.TASKS.COLUMN_UID)
+
             val taskColumn = getColumnIndex(ScheduleProviderContract.TASKS.COLUMN_TASK)
             val priorityColumn = getColumnIndex(ScheduleProviderContract.TASKS.COLUMN_PRIORITY)
             val statusColumn = getColumnIndex(ScheduleProviderContract.TASKS.COLUMN_STATUS)
@@ -174,6 +169,7 @@ class ContentProviderParser(
             val evDateColumn = getColumnIndex(ScheduleProviderContract.TASKS.COLUMN_EV_DATE)
             val evStartTimeColumn = getColumnIndex(ScheduleProviderContract.TASKS.COLUMN_EV_START_TIME)
             val evEndTimeColumn = getColumnIndex(ScheduleProviderContract.TASKS.COLUMN_EV_END_TIME)
+            val isDayPlannerColumn = getColumnIndex(ScheduleProviderContract.TASKS.COLUMN_IS_DAY_PLANNER)
             val uriColumn = getColumnIndex(ScheduleProviderContract.TASKS.COLUMN_URI)
 
 
@@ -188,6 +184,7 @@ class ContentProviderParser(
                     evDate = getStringOrNull(evDateColumn),
                     evStartTime = getStringOrNull(evStartTimeColumn),
                     evEndTime = getStringOrNull(evEndTimeColumn),
+                    isDayPlanner = getStringOrNull(isDayPlannerColumn).toBoolean(),
                     uri = getStringOrNull(uriColumn)?.let { Uri.parse(it) }
                 ))
             }

@@ -120,6 +120,7 @@ class MainActivity : AppCompatActivity() {
         pbLoadingWheel = findViewById(R.id.pbLoadingWheel)
 
 
+        // TODO erase this for release
         reloadTasks(update = false, firstLaunch = true)
     }
 

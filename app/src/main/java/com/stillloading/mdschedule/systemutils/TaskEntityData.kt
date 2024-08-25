@@ -19,6 +19,7 @@ data class TaskEntityData(
     @ColumnInfo(name = "ev_date") val evDate: String?,
     @ColumnInfo(name = "ev_start_time") val evStartTime: String?,
     @ColumnInfo(name = "ev_end_time") val evEndTime: String?,
+    @ColumnInfo(name = "is_day_planner") val isDayPlanner: String,
     @ColumnInfo(name = "uri") val uri: String?,
 )
 

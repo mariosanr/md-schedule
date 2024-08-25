@@ -2,7 +2,6 @@ package com.stillloading.mdschedule.systemutils
 
 import android.content.Context
 import android.net.Uri
-import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
@@ -18,10 +17,8 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
-import java.time.DateTimeException
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.format.DateTimeParseException
 
 class FileSystemManager(
     private val context: Context
@@ -156,6 +153,7 @@ class FileSystemManager(
                 evDate = task.evDate,
                 evStartTime = task.evStartTime,
                 evEndTime = task.evEndTime,
+                isDayPlanner = task.isDayPlanner.toString(),
                 uri = task.uri.toString()
             ))
 

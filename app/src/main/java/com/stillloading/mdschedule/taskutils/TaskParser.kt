@@ -7,6 +7,7 @@ import androidx.documentfile.provider.DocumentFile
 import com.stillloading.mdschedule.data.FileData
 import com.stillloading.mdschedule.data.SettingsData
 import com.stillloading.mdschedule.data.Task
+import com.stillloading.mdschedule.data.TaskDates
 import com.stillloading.mdschedule.data.TaskPriority
 import com.stillloading.mdschedule.data.UnParsedTask
 import kotlinx.coroutines.Dispatchers
@@ -36,6 +37,10 @@ class TaskParser(private val context: Context, private val settings: SettingsDat
         \s*(?<startTime>\d\d?:\d{2})?
         \s*-?\s*(?<endTime>\d\d?:\d{2})?
     """.trimIndent(), RegexOption.COMMENTS)
+
+    private val getTimeRegEx = Regex("^(?<hour>\\d\\d?):(?<minutes>\\d{2})")
+
+    private val lastValidTime = "23:59"
 
 
     suspend fun getTasks(date: LocalDate, startingUri: Uri): MutableList<Task>{
@@ -156,15 +161,15 @@ class TaskParser(private val context: Context, private val settings: SettingsDat
         val parsedTasks: MutableList<Task> = mutableListOf()
 
 
-        var evDate: String? = null
-        var evStartTime: String? = null
-        var evEndTime: String? = null
+        var evDate: String?
+        var evStartTime: String?
+        var evEndTime: String?
 
         var priority: TaskPriority
-        var status: String? = null
-        var dueDate: String? = null
-        var scheduledDate: String? = null
-        var startDate: String? = null
+        var status: String?
+        var dueDate: String?
+        var scheduledDate: String?
+        var startDate: String?
 
         // Day Planner tasks
         for(task in dayPlannerTasks){
@@ -176,6 +181,16 @@ class TaskParser(private val context: Context, private val settings: SettingsDat
             evStartTime = statusAndPlannerMatch?.groups?.get("startTime")?.value
             evEndTime = statusAndPlannerMatch?.groups?.get("endTime")?.value
 
+            // modify or remove any invalid times
+            val taskDates = TaskDates(
+                evStartTime = evStartTime,
+                evEndTime = evEndTime
+            )
+            checkValidEventTimes(taskDates)
+
+            if(taskDates.evStartTime == null){
+                continue
+            }
 
             parsedTasks.add(
                 Task(
@@ -183,8 +198,9 @@ class TaskParser(private val context: Context, private val settings: SettingsDat
                 status = status,
                 scheduledDate = dateString,
                 evDate = dateString,
-                evStartTime = evStartTime,
-                evEndTime = evEndTime,
+                evStartTime = taskDates.evStartTime,
+                evEndTime = taskDates.evEndTime,
+                isDayPlanner = true,
                 uri = uri
             )
             )
@@ -206,11 +222,9 @@ class TaskParser(private val context: Context, private val settings: SettingsDat
             scheduledDate = null
             startDate = null
 
-            // FIXME Optimizacion: Ir yo con un for desde atras del string agarrando una por una.
+
             matches = taskParseRegEx.findAll(text)
             matches.forEach { match ->
-                //Log.i(TAG, match.groupValues.toString())
-                //Log.i(TAG, match.groups["symbol"]?.value.toString())
                 when(match.groups["symbol"]?.value){
                     "📅" -> {
                         dueDate = match.groups["date"]?.value
@@ -237,9 +251,9 @@ class TaskParser(private val context: Context, private val settings: SettingsDat
                         priority = TaskPriority.LOWEST
                     }
                     "@" -> {
+                        evDate = match.groups["date"]?.value
                         evStartTime = match.groups["startTime"]?.value
                         evEndTime = match.groups["endTime"]?.value
-                        evDate = if(evStartTime != null) match.groups["date"]?.value else null
                     }
                     else -> Log.i(TAG, "Symbol: ${match.groups["symbol"]?.value.toString()} not implemented")
                 }
@@ -248,10 +262,7 @@ class TaskParser(private val context: Context, private val settings: SettingsDat
 
             // if no scheduled date, make the scheduled date the note title if applicable
             if (scheduledDate == null){
-                try {
-                    LocalDate.parse(title)
-                    scheduledDate = title
-                }catch (_: DateTimeParseException) {}
+                scheduledDate = title
             }
 
             // If not in date
@@ -260,7 +271,21 @@ class TaskParser(private val context: Context, private val settings: SettingsDat
                 continue
             }
 
-            if(evStartTime != null && evDate == null) evDate = getEventDate(dateString, startDate, scheduledDate, dueDate)
+            // from this point there are only going to be tasks that we are showing to the user
+            // set the event date if there wasnt one specified
+            if(evStartTime != null && evDate == null) evDate = getEventDate(startDate, scheduledDate, dueDate)
+
+            // check if each date is valid before setting it
+            val taskDates = TaskDates(
+                startDate = startDate,
+                scheduledDate = scheduledDate,
+                dueDate = dueDate,
+                evDate = evDate,
+                evStartTime = evStartTime,
+                evEndTime = evEndTime
+            )
+            // will remove or modify any date and time that is not valid
+            checkValidDateTimes(taskDates)
 
             statusAndPlannerMatch = taskStatusRegEx.find(text)
             status = statusAndPlannerMatch?.groups?.get("status")?.value
@@ -270,12 +295,13 @@ class TaskParser(private val context: Context, private val settings: SettingsDat
                 task = text,
                 priority = priority,
                 status = status,
-                dueDate = dueDate,
-                scheduledDate = scheduledDate,
-                startDate = startDate,
-                evDate = evDate,
-                evStartTime = evStartTime,
-                evEndTime = evEndTime,
+                dueDate = taskDates.dueDate,
+                scheduledDate = taskDates.scheduledDate,
+                startDate = taskDates.startDate,
+                evDate = taskDates.evDate,
+                evStartTime = taskDates.evStartTime,
+                evEndTime = taskDates.evEndTime,
+                isDayPlanner = false,
                 uri = uri,
             )
             )
@@ -292,6 +318,7 @@ class TaskParser(private val context: Context, private val settings: SettingsDat
             // checks if the date is between the start or due date (inclusive in both sides)
             //!(date.isBefore(LocalDate.parse(startDate)) || date.isAfter(LocalDate.parse(dueDate)))
 
+            // checks if the date is between the start and due date (non inclusive)
             date.isBefore(LocalDate.parse(dueDate)) && date.isAfter(LocalDate.parse(startDate))
         }catch (_: DateTimeParseException) {
             false
@@ -300,23 +327,112 @@ class TaskParser(private val context: Context, private val settings: SettingsDat
 
 
     // returns which is supposed to be treated as the event date if none was specified
-    private fun getEventDate(date: String, startDate: String?, scheduledDate: String?, dueDate: String?): String?{
+    private fun getEventDate(startDate: String?, scheduledDate: String?, dueDate: String?): String?{
         return when{
             startDate != null -> startDate
             dueDate != null -> dueDate
             scheduledDate != null -> scheduledDate
             else -> null
         }
-        /*
-        if(date == startDate){
-            return startDate
-        }else if (startDate == null && date == dueDate){
-            return dueDate
-        }else if(startDate == null && dueDate == null && date == scheduledDate){
-            return scheduledDate
+    }
+
+
+    private fun checkValidDateTimes(taskDates: TaskDates){
+        taskDates.startDate = getValidDate(taskDates.startDate)
+        taskDates.scheduledDate = getValidDate(taskDates.scheduledDate)
+        taskDates.dueDate = getValidDate(taskDates.dueDate)
+        taskDates.evDate = getValidDate(taskDates.evDate)
+
+        if(taskDates.evDate == null){
+            taskDates.evStartTime = null
+            taskDates.evEndTime = null
+        }else{
+            checkValidEventTimes(taskDates)
+        }
+    }
+
+    private fun checkValidEventTimes(taskDates: TaskDates){
+        var (startHour, startMinutes) = getHourMinutes(taskDates.evStartTime)
+        var (endHour, endMinutes) = getHourMinutes(taskDates.evEndTime)
+
+        if(startMinutes == null) startMinutes = 0
+        if(endMinutes == null) endMinutes = 0
+
+        // if start time is greater than end time, invert them
+        if(startHour != null && endHour != null){
+            if((startHour > endHour) or (startHour == endHour && startMinutes > endMinutes)){
+                val tempStartTime = taskDates.evStartTime
+                val tempStartHour = startHour
+                val tempStartMinutes = startMinutes
+
+                taskDates.evStartTime = taskDates.evEndTime
+                taskDates.evEndTime = tempStartTime
+
+                // also update the local variables to perform the valid time check
+                startHour = endHour
+                startMinutes = endMinutes
+                endHour = tempStartHour
+                endMinutes = tempStartMinutes
+            }
         }
 
-        return null
-         */
+
+        // assert times are valid
+        taskDates.evStartTime = getValidTime(startHour, startMinutes, taskDates.evStartTime, isStartTime = true)
+        taskDates.evEndTime = getValidTime(endHour, endMinutes, taskDates.evEndTime, isStartTime = false)
+
+
+        // if start time and end time is the same, erase end time
+        if(startHour == endHour && startMinutes == endMinutes){
+            taskDates.evEndTime = null
+        }
     }
+
+
+
+    private fun getValidDate(date: String?): String?{
+        if(date == null){
+            return null
+        }
+
+        try{
+            LocalDate.parse(date)
+            return date
+        }catch (_: DateTimeParseException){
+            return null
+        }
+    }
+
+    private fun getHourMinutes(time: String?): Pair<Int?, Int?>{
+        if(time == null){
+            return Pair(null, null)
+        }
+
+        val match = getTimeRegEx.find(time)
+        val hour = match?.groups?.get("hour")?.value?.toIntOrNull()
+        val minutes = match?.groups?.get("minutes")?.value?.toIntOrNull()
+
+        return Pair(hour, minutes)
+    }
+
+    private fun getValidTime(hour: Int?, minutes: Int?, time: String?, isStartTime: Boolean = false): String?{
+        if(hour == null || minutes == null) return null
+
+        if(hour == 24 && minutes == 0){
+            return lastValidTime
+        }
+
+        if(isStartTime && hour >= 24){
+            return null
+        }else if(!isStartTime && hour >= 24){
+            return lastValidTime
+        }
+
+        if(minutes >= 60){
+            return null
+        }
+
+        return time
+    }
+
 }

@@ -36,12 +36,12 @@ object ScheduleProviderContract{
         const val SKIP_DIRECTORIES = "skip_directories"
     }
 
-    object TASKS: BaseColumns{
+    object TASKS{
         val CONTENT_URI: Uri = BASE_CONTENT_URI.buildUpon().appendPath(PATH_TASKS).build()
 
         const val DATE = "date"
 
-        const val _ID = BaseColumns._ID
+        const val COLUMN_UID = "uid"
         const val COLUMN_TASK = "task"
         const val COLUMN_PRIORITY = "priority"
         const val COLUMN_STATUS = "status"
@@ -51,6 +51,7 @@ object ScheduleProviderContract{
         const val COLUMN_EV_DATE = "ev_date"
         const val COLUMN_EV_START_TIME = "ev_start_time"
         const val COLUMN_EV_END_TIME = "ev_end_time"
+        const val COLUMN_IS_DAY_PLANNER = "is_day_planner"
         const val COLUMN_URI = "uri"
     }
 
