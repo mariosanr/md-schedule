@@ -8,6 +8,7 @@ import android.content.Intent
 import android.database.ContentObserver
 import android.os.Handler
 import android.os.HandlerThread
+import android.util.Log
 import com.stillloading.mdschedule.systemutils.ContentProviderParser
 import com.stillloading.mdschedule.systemutils.ScheduleProviderContract
 import com.stillloading.mdschedule.widgetutils.WidgetManager
@@ -18,14 +19,18 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 
 
+// FIXME the content observer stops receiving the on change updates eventually, seems like no matter what I change
+//  I have tried making the content observer, handler and handler thread static with object companion.
+//  I have tried setting the observer on update instead of on enabled, and I have removed all user interaction with the widget
 class TaskWidgetContentObserver(
     private val appWidgetManager: AppWidgetManager,
     private val componentName: ComponentName,
     handler: Handler?
 ) : ContentObserver(handler) {
 
+    private val TAG = "WidgetContentObserver"
+
     override fun onChange(selfChange: Boolean) {
-        super.onChange(selfChange)
         appWidgetManager.notifyAppWidgetViewDataChanged(
             appWidgetManager.getAppWidgetIds(componentName), R.id.lvWidgetTaskList
         )
@@ -36,11 +41,11 @@ class TaskWidgetContentObserver(
 
 class TasksWidget : AppWidgetProvider() {
 
-    companion object {
-        private var contentObserver: TaskWidgetContentObserver? = null
-        private var handler: Handler? = null
-        private var handlerThread: HandlerThread? = null
-    }
+    private val TAG = "WidgetProvider"
+
+    private var contentObserver: TaskWidgetContentObserver? = null
+    private var handler: Handler? = null
+    private var handlerThread: HandlerThread? = null
 
     private var contentProviderParser: ContentProviderParser? = null
 
@@ -56,6 +61,7 @@ class TasksWidget : AppWidgetProvider() {
         }
 
 
+        /*
         // update the tasks after updating all the widgets
         CoroutineScope(Dispatchers.IO).launch {
             if(contentProviderParser == null){
@@ -63,10 +69,10 @@ class TasksWidget : AppWidgetProvider() {
             }
             contentProviderParser!!.updateTasks(LocalDate.now().toString())
         }
+         */
     }
 
-
-    override fun onEnabled(context: Context) {
+    private fun setContentObserver(context: Context){
         if(contentObserver == null){
             val appWidgetManager = AppWidgetManager.getInstance(context)
             val componentName = ComponentName(context, TasksWidget::class.java)
@@ -77,20 +83,24 @@ class TasksWidget : AppWidgetProvider() {
 
             contentObserver = TaskWidgetContentObserver(appWidgetManager, componentName, handler)
 
+            Log.d(TAG, "Set the content observer")
         }
 
-        // TODO test if the widget update functionality is necessary.
-        // if the bugs from updating directly from the widget continue I can disable the function and
-        // make them enter the app to update the tasks. The widget does not necessarily need to be able to update the data
-        // since it updates on its own when new data is available.
-        context.applicationContext.contentResolver.registerContentObserver(
+        //
+        context.contentResolver.registerContentObserver(
             ScheduleProviderContract.UPDATING_TASKS.CONTENT_URI,
             false,
             contentObserver!!
         )
     }
 
+
+    override fun onEnabled(context: Context) {
+        setContentObserver(context)
+    }
+
     override fun onDisabled(context: Context) {
+        Log.d(TAG, "Disabling the content observer")
         contentObserver?.let {
             context.applicationContext.contentResolver.unregisterContentObserver(it)
         }
@@ -100,6 +110,7 @@ class TasksWidget : AppWidgetProvider() {
 
 
     override fun onReceive(context: Context, intent: Intent) {
+        /* removed because the content observer stops working if you enter the app from clicking the widget. Still dont know the solution
         val appWidgetManager = AppWidgetManager.getInstance(context)
         if(intent.action == WidgetManager.CLICK_ACTION){
             // vars that will probably be needed if I change what the click on each item does
@@ -116,6 +127,7 @@ class TasksWidget : AppWidgetProvider() {
                 context.startActivity(it)
             }
         }
+         */
 
         super.onReceive(context, intent)
     }

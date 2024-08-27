@@ -19,6 +19,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.stillloading.mdschedule.data.DirectoryData
 import com.stillloading.mdschedule.data.SettingsDisplayData
+import com.stillloading.mdschedule.settingsutils.DirectoryAdapter
 import com.stillloading.mdschedule.systemutils.ContentProviderParser
 
 

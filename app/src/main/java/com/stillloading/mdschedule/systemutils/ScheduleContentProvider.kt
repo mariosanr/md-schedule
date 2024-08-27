@@ -7,6 +7,7 @@ import android.database.Cursor
 import android.database.MatrixCursor
 import android.net.Uri
 import android.provider.BaseColumns
+import android.util.Log
 import com.stillloading.mdschedule.data.SettingsFlowData
 import com.stillloading.mdschedule.data.toSettingsData
 import kotlinx.coroutines.Dispatchers
@@ -78,7 +79,7 @@ private val uriMatcher = UriMatcher(UriMatcher.NO_MATCH).apply {
 
 class ScheduleContentProvider : ContentProvider() {
 
-    private val TAG = "Schedule Provider"
+    private val TAG = "ScheduleContentProvider"
 
     private lateinit var fileSystemManager: FileSystemManager
 
@@ -134,6 +135,7 @@ class ScheduleContentProvider : ContentProvider() {
                 }
             }
             2 -> { // tasks
+                Log.d(TAG, "Retrieving all tasks")
                 taskDao.getAll()
             }
             3 -> {
@@ -146,6 +148,7 @@ class ScheduleContentProvider : ContentProvider() {
                 }
             }
             4 -> {
+                Log.d(TAG, "Retrieving updating var")
                 val cursor = MatrixCursor(arrayOf(ScheduleProviderContract.UPDATING_TASKS.COLUMN_UPDATING)).apply {
                     addRow(arrayOf(updatingDB.toString()))
                 }
@@ -187,9 +190,11 @@ class ScheduleContentProvider : ContentProvider() {
                 ScheduleProviderContract.CODE_SUCCESS
             }
             2 -> { // tasks
+                Log.d(TAG, "Entered updating tasks")
                 if(!updatingDB){
                     updatingDB = true
                     context?.contentResolver?.notifyChange(ScheduleProviderContract.UPDATING_TASKS.CONTENT_URI, null)
+                    Log.d(TAG, "Updating tasks and notified of change")
 
 
                     runBlocking(Dispatchers.IO) {
@@ -197,17 +202,21 @@ class ScheduleContentProvider : ContentProvider() {
                         if(date != null){
                             val settings = fileSystemManager.getSettingsData(settingsFlowData)
 
+                            Log.d(TAG, "Started task update function")
                             val tasksArray = fileSystemManager.getTasksArray(settings, date)
+                            Log.d(TAG, "Finished task update function")
 
                             // wait for the operation to complete to clear the database
                             taskDao.deleteAll()
 
                             taskDao.insertAll(*tasksArray)
                             fileSystemManager.saveLastUpdated(LocalDateTime.now())
+                            Log.d(TAG, "Inserted the new values in the database")
                         }
                     }
                     updatingDB = false
                     context?.contentResolver?.notifyChange(ScheduleProviderContract.UPDATING_TASKS.CONTENT_URI, null)
+                    Log.d(TAG, "Finished updating and notified of change")
 
                     context?.contentResolver?.notifyChange(uri, null)
                     return ScheduleProviderContract.CODE_SUCCESS

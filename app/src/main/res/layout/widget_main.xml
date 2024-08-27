@@ -30,9 +30,10 @@
         android:textSize="20sp"
         android:textStyle="italic"
         android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true"
-        android:layout_toStartOf="@id/ibRefresh" />
+        android:layout_alignParentTop="true"/>
+        <!-- android:layout_toStartOf="@id/ibRefresh" -->
 
+    <!--
     <ImageButton
         android:id="@+id/ibRefresh"
         android:layout_width="wrap_content"
@@ -48,6 +49,7 @@
         android:tint="@color/checked_text"
         android:src="@drawable/ic_refresh"
         tools:ignore="UseAppTint" />
+    -->
 
 
     <TextView

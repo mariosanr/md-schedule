@@ -6,12 +6,17 @@ import android.net.Uri
 import android.util.Log
 import android.widget.Toast
 import androidx.core.database.getStringOrNull
+import androidx.lifecycle.Observer
+import androidx.work.BackoffPolicy
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequest
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.OutOfQuotaPolicy
+import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.WorkRequest
+import androidx.work.workDataOf
 import com.stillloading.mdschedule.data.DirectoryData
-import com.stillloading.mdschedule.data.SettingsData
 import com.stillloading.mdschedule.data.SettingsDisplayData
 import com.stillloading.mdschedule.data.Task
 import com.stillloading.mdschedule.data.TaskDisplayData
@@ -21,10 +26,14 @@ import com.stillloading.mdschedule.data.toContentValues
 import com.stillloading.mdschedule.data.toSettingsData
 import com.stillloading.mdschedule.taskutils.TaskDisplayManager
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeParseException
+import java.util.concurrent.TimeUnit
+import kotlin.coroutines.resume
 
 class ContentProviderParser(
     private val context: Context
@@ -130,7 +139,6 @@ class ContentProviderParser(
     }
 
 
-    // FIXME do this through Work Manager instead to be sure it finishes.
     suspend fun updateTasks(date: String): Int?{
         val taskUpdateValues = ContentValues().apply {
             put(ScheduleProviderContract.TASKS.DATE, date)
@@ -146,6 +154,35 @@ class ContentProviderParser(
             return null
         }
         return ScheduleProviderContract.CODE_SUCCESS
+    }
+
+
+    // TODO to make this work I need to implement a content observer as in the widget
+    // update tasks with a work manager
+    /*
+    suspend fun updateTasks(date: String): Int?{
+        val workManager = WorkManager.getInstance(context)
+
+        val updateTasksWorkRequest: OneTimeWorkRequest =
+            OneTimeWorkRequestBuilder<UpdateTasksWorker>()
+                .setInputData(workDataOf(
+                    "date" to date
+                ))
+                .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
+                .setBackoffCriteria(
+                    BackoffPolicy.EXPONENTIAL,
+                    WorkRequest.MAX_BACKOFF_MILLIS,
+                    TimeUnit.MILLISECONDS
+                )
+                .build()
+
+        workManager.enqueue(updateTasksWorkRequest)
+     */
+
+    private suspend fun showRefreshingToast(){
+        withContext(Dispatchers.Main){
+            Toast.makeText(context, "Already refreshing", Toast.LENGTH_SHORT).show()
+        }
     }
 
 

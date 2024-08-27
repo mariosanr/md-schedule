@@ -1,4 +1,4 @@
-package com.stillloading.mdschedule
+package com.stillloading.mdschedule.settingsutils
 
 import android.view.LayoutInflater
 import android.view.ViewGroup

@@ -56,6 +56,7 @@ class TaskDisplayManager(private val settings: SettingsData) {
         )
         )
 
+
         // create the display tasks from ordered tasks list
         val displayTasks: MutableList<TaskWidgetDisplayData> = mutableListOf()
 
@@ -74,7 +75,14 @@ class TaskDisplayManager(private val settings: SettingsData) {
     }
 
     private fun getWidgetSummaryText(task: Task, date: String): String{
-        return when{
+        val summaryText = StringBuilder("")
+
+        val status = getStatusName(task.status)
+        if(status != "To Do" && status != ""){
+            summaryText.append("$status: ")
+        }
+
+        summaryText.append(when{
             task.evDate == date && task.evStartTime != null && task.evEndTime != null -> {
                 "${task.evStartTime} - ${task.evEndTime}"
             }
@@ -85,7 +93,9 @@ class TaskDisplayManager(private val settings: SettingsData) {
                 // if it is not an event or it is not today
                 getTaskSummaryText(task, date)
             }
-        }
+        })
+
+        return summaryText.toString()
     }
 
     fun getTasks(tasks: MutableList<Task>, date: String): MutableList<TaskDisplayData>{
@@ -235,8 +245,9 @@ class TaskDisplayManager(private val settings: SettingsData) {
         }
     }
 
+    // is checked if the status is done or cancelled
     private fun getIsChecked(status: String?): Boolean{
-        return status == "x"
+        return status == "x" || status == "-"
     }
 
 

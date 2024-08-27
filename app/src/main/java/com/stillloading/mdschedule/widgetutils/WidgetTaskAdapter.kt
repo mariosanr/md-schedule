@@ -15,6 +15,8 @@ import com.stillloading.mdschedule.data.TaskWidgetDisplayData
 import com.stillloading.mdschedule.systemutils.ContentProviderParser
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import kotlin.properties.Delegates
 
 class TasksWidgetService : RemoteViewsService(){
@@ -26,7 +28,7 @@ class TasksWidgetService : RemoteViewsService(){
 class TaskRemoteViewsFactory(private val context: Context, intent: Intent?)
     : RemoteViewsService.RemoteViewsFactory{
 
-    private val TAG = "MarkdownScheduleWidget"
+    private val TAG = "WidgetListAdapter"
     private val tasks: MutableList<TaskWidgetDisplayData> = mutableListOf()
 
     private var contentProviderParser: ContentProviderParser = ContentProviderParser(context = context) // already is appContext
@@ -49,12 +51,18 @@ class TaskRemoteViewsFactory(private val context: Context, intent: Intent?)
             val appWidgetManager = AppWidgetManager.getInstance(context)
             val remoteView = RemoteViews(context.packageName, R.layout.widget_main)
 
+            val date = LocalDate.now().format(DateTimeFormatter.ofPattern("EEE: MMM d, uuuu"))
+
             if(isUpdatingTasks){
+                Log.d(TAG, "Task is updating")
                 remoteView.also {
+                    it.setTextViewText(R.id.tvWidgetDate, date)
                     it.setViewVisibility(R.id.pbWidgetLoadingWheel, View.VISIBLE)
                 }
             }else{
+                Log.d(TAG, "Task is finished updating")
                 remoteView.also {
+                    it.setTextViewText(R.id.tvWidgetDate, date)
                     it.setViewVisibility(R.id.pbWidgetLoadingWheel, View.GONE)
                 }
             }
@@ -64,6 +72,7 @@ class TaskRemoteViewsFactory(private val context: Context, intent: Intent?)
                 tasks.addAll(newList)
             }
 
+            Log.d(TAG, "Partially updating widget")
             appWidgetManager.partiallyUpdateAppWidget(widgetId, remoteView)
 
         }
@@ -83,6 +92,7 @@ class TaskRemoteViewsFactory(private val context: Context, intent: Intent?)
                 isChecked = false
             ))
         }
+
 
         val view = RemoteViews(context.packageName, R.layout.widget_item_task)
 

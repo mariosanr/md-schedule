@@ -38,6 +38,7 @@ class WidgetManager() {
 
         rootView.setViewVisibility(R.id.tvWidgetTasksNone, View.GONE)
 
+        /* removed because the content observer stops working if you enter the app from clicking the widget. Still dont know the solution
         // set on click action to the widget's background (start the app)
         val openAppPendingIntent = PendingIntent.getActivity(
             context,
@@ -46,8 +47,10 @@ class WidgetManager() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         rootView.setOnClickPendingIntent(R.id.mainWidgetLayout, openAppPendingIntent)
+         */
 
 
+        /* removed the refresh button on widget until updating is done entirely through work manager
         // set on click action to refresh button
         val refreshPendingIntent = PendingIntent.getBroadcast(
             context,
@@ -59,6 +62,7 @@ class WidgetManager() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         rootView.setOnClickPendingIntent(R.id.ibRefresh, refreshPendingIntent)
+         */
 
 
         // set the adapter for the list view to show all the tasks

@@ -5,6 +5,7 @@
     <color name="transparent">#00FFFFFF</color>
     <color name="grey_blur">#B3222222</color>
     <color name="red">#FF1D1D</color>
+    <color name="purple">#800E93</color>
     <color name="time_bar">#462B78</color>
     <color name="card_grey">#5E5E5E</color>
     <color name="unchecked_text">#E6E6E6</color>

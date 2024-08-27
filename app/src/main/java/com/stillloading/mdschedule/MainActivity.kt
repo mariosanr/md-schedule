@@ -12,6 +12,7 @@ import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
+import android.window.OnBackInvokedDispatcher
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.content.res.AppCompatResources
@@ -253,6 +254,7 @@ class MainActivity : AppCompatActivity() {
             updatingTasks = false
         }
     }
+
 
     // Menu code
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
