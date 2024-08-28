@@ -26,7 +26,7 @@ class TimeTaskManager (
 
     private val defaultTime: Float = 0.5f // minutes fraction
     private val hourHeight: Int = context.resources.getDimension(R.dimen.hour_height).toInt()
-    private val hourWidth: Int = 750
+    private val hourWidth: Int = context.resources.getDimension(R.dimen.time_task_width).toInt()
     private val maxWidthDivision: Int = 2 // changing this number breaks some stuff in complex layouts
     private val defaultTaskMarginStart: Int = context.resources.getDimension(R.dimen.time_task_margin_start).toInt()
 
