@@ -1,6 +1,5 @@
-package com.stillloading.mdschedule.systemutils
+package com.stillloading.mdschedule.backgroundutils
 
-import android.content.ContentValues
 import android.content.Context
 import android.content.pm.ServiceInfo
 import android.os.Build
@@ -9,7 +8,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import com.stillloading.mdschedule.notificationsutils.NotificationsCreator
-import java.time.LocalDate
+import com.stillloading.mdschedule.systemutils.ContentProviderParser
 
 
 const val TAG = "ScheduleWorkerUnits"
@@ -22,6 +21,7 @@ class UpdateTasksWorker(
 ): CoroutineWorker(appContext, workerParameters){
 
 
+    /*
     override suspend fun getForegroundInfo(): ForegroundInfo {
         val notificationsCreator = NotificationsCreator(appContext)
         val (id, notification) = notificationsCreator.getForegroundNotification()
@@ -34,30 +34,27 @@ class UpdateTasksWorker(
             ForegroundInfo(id, notification)
         }
     }
+     */
 
     override suspend fun doWork(): Result {
+        /* for if I do expedited work
         try {
             setForeground(getForegroundInfo())
         }catch (_: IllegalStateException){
             return Result.retry()
         }
+         */
 
         val date = inputData.getString("date") ?: return Result.failure()
+        Log.d(TAG, "Got date in worker: $date")
 
 
         // update the tasks database
-        val taskUpdateValues = ContentValues().apply {
-            put(ScheduleProviderContract.TASKS.DATE, date)
-        }
-        val responseCode = appContext.contentResolver.update(
-            ScheduleProviderContract.TASKS.CONTENT_URI, taskUpdateValues, null, null
-        )
+        val contentProviderParser = ContentProviderParser(context = appContext)
+        contentProviderParser.updateTasks(date, false) ?: return Result.failure()
 
+        Log.d(TAG, "Successfully updated the tasks in Worker")
 
-        // if it is already updating, return failure
-        if(responseCode == ScheduleProviderContract.CODE_UPDATING){
-            return Result.failure()
-        }
         return Result.success()
     }
 }

@@ -21,7 +21,8 @@ import java.time.LocalDate
 
 // FIXME the content observer stops receiving the on change updates eventually, seems like no matter what I change
 //  I have tried making the content observer, handler and handler thread static with object companion.
-//  I have tried setting the observer on update instead of on enabled, and I have removed all user interaction with the widget
+//  I have tried setting the observer on update instead of on enabled, and I have removed all user interaction with the widget.
+//  Maybe the error is that I was updating the tasks with a coroutine instead of a worker, but the updates did finish.
 class TaskWidgetContentObserver(
     private val appWidgetManager: AppWidgetManager,
     private val componentName: ComponentName,
@@ -83,7 +84,6 @@ class TasksWidget : AppWidgetProvider() {
 
             contentObserver = TaskWidgetContentObserver(appWidgetManager, componentName, handler)
 
-            Log.d(TAG, "Set the content observer")
         }
 
         //
@@ -96,29 +96,29 @@ class TasksWidget : AppWidgetProvider() {
 
 
     override fun onEnabled(context: Context) {
-        setContentObserver(context)
+        //setContentObserver(context)
     }
 
     override fun onDisabled(context: Context) {
-        Log.d(TAG, "Disabling the content observer")
-        contentObserver?.let {
-            context.applicationContext.contentResolver.unregisterContentObserver(it)
-        }
-        handlerThread?.quit()
+        //contentObserver?.let {
+        //    context.applicationContext.contentResolver.unregisterContentObserver(it)
+        //}
+        //handlerThread?.quit()
     }
 
 
 
     override fun onReceive(context: Context, intent: Intent) {
-        /* removed because the content observer stops working if you enter the app from clicking the widget. Still dont know the solution
-        val appWidgetManager = AppWidgetManager.getInstance(context)
+        //val appWidgetManager = AppWidgetManager.getInstance(context)
         if(intent.action == WidgetManager.CLICK_ACTION){
             // vars that will probably be needed if I change what the click on each item does
+            /*
             val appWidgetId: Int = intent.getIntExtra(
                 AppWidgetManager.EXTRA_APPWIDGET_ID,
                 AppWidgetManager.INVALID_APPWIDGET_ID
             )
             val viewPosition: Int = intent.getIntExtra(WidgetManager.EXTRA_ITEM, 0)
+             */
 
 
             // start the app
@@ -127,7 +127,6 @@ class TasksWidget : AppWidgetProvider() {
                 context.startActivity(it)
             }
         }
-         */
 
         super.onReceive(context, intent)
     }

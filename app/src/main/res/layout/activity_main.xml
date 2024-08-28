@@ -18,7 +18,6 @@
         android:paddingEnd="7dp"
         android:text="@string/example"
         android:textSize="20sp"
-        android:textStyle="italic"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -48,6 +47,7 @@
                 android:layout_height="wrap_content"
                 android:text="@string/last_updated"
                 android:textSize="20sp"
+                android:textStyle="italic"
                 android:paddingBottom="5dp"
                 android:visibility="gone"
                 />

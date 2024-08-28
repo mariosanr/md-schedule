@@ -92,7 +92,6 @@ class MainActivity : AppCompatActivity() {
         val popupBinding = PopupTaskBinding.inflate(layoutInflater)
         val taskPopup = TaskPopup(popupBinding, this)
 
-        // TODO get the task list from a saved file probably
         val taskLists: MutableList<TaskDisplayData> = mutableListOf()
         nonTimeTaskAdapter = NonTimeTaskAdapter(taskLists, taskPopup, this)
 
@@ -121,28 +120,26 @@ class MainActivity : AppCompatActivity() {
         pbLoadingWheel = findViewById(R.id.pbLoadingWheel)
 
 
-        // TODO erase this for release
-        reloadTasks(update = false, firstLaunch = true)
+        //reloadTasks(update = false, firstLaunch = true)
     }
 
     override fun onStart() {
         super.onStart()
+
+        if(!updatingTasks){
+            reloadTasks(false)
+        }
+
 
         if(timeTaskManager.timeBarView != null){
             timeTaskManager.setTimeBar(minHour, maxHour)
         }
     }
 
-    override fun onRestart() {
-        super.onRestart()
 
-        if(!updatingTasks){
-            reloadTasks(false)
-        }
-    }
-
-    private fun setTodayDate(){
-        val formattedDate = LocalDate.now().format(DateTimeFormatter.ofPattern("'Today:' MMM d, uuuu"))
+    private fun setTodayDate(date: LocalDate = LocalDate.now()){
+        val pattern = DateTimeFormatter.ofPattern("'Today:' EEE, MMM d, uuuu")
+        val formattedDate = date.format(pattern)
         tvDate.text = formattedDate
     }
 
@@ -189,8 +186,11 @@ class MainActivity : AppCompatActivity() {
             linearLayoutMain.alpha = 0.4f
             updatingTasks = true
 
+            // if not updating, use the last modified date, since that is what the tasks in the database were made with
+            val date = if(update)
+                LocalDate.now() else contentProviderParser.getLastUpdated()?.toLocalDate() ?: LocalDate.now()
 
-            val (timeTasks, nonTimeTasks) = contentProviderParser.getTasks(update) ?: run {
+            val (timeTasks, nonTimeTasks) = contentProviderParser.getTasks(date.toString(), update) ?: run {
                 pbLoadingWheel.visibility = View.GONE
                 linearLayoutMain.alpha = 1.0f
                 updatingTasks = false
@@ -217,12 +217,10 @@ class MainActivity : AppCompatActivity() {
 
 
             // non time tasks
-            // TODO pass the time tasks to the corresponding adapter
             nonTimeTaskAdapter.reloadTasks(nonTimeTasks)
 
 
             //time tasks
-            // TODO get min and max hours
             setMinMaxHours(timeTasks)
             dayViewHourAdapter.changeHours(minHour,maxHour)
 
@@ -231,12 +229,9 @@ class MainActivity : AppCompatActivity() {
 
             setTodayDate()
 
-            val lastUpdated = contentProviderParser.getLastUpdated()
+            val lastUpdated = contentProviderParser.getLastUpdatedString()
             if(lastUpdated != null){
-                val dateTimeFormatter = if(lastUpdated.toLocalDate().isEqual(LocalDate.now()))
-                    DateTimeFormatter.ofPattern("'Last updated at' HH:mm") else
-                        DateTimeFormatter.ofPattern("'Last updated on' MMM d 'at' HH:mm")
-                tvLastUpdated.text = lastUpdated.format(dateTimeFormatter)
+                tvLastUpdated.text = lastUpdated
                 tvLastUpdated.visibility = View.VISIBLE
             }else{
                 tvLastUpdated.visibility = View.GONE

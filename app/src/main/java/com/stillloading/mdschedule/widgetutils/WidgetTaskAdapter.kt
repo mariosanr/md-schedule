@@ -45,6 +45,14 @@ class TaskRemoteViewsFactory(private val context: Context, intent: Intent?)
         runBlocking(Dispatchers.Main) {
             Log.i(TAG, "On Data Set Changed")
 
+
+            contentProviderParser.getWidgetTasks().let { newList ->
+                tasks.clear()
+                tasks.addAll(newList)
+            }
+
+            // update the tasks from the content observer (does loading wheel when in process)
+            /*
             val isUpdatingTasks = contentProviderParser.getIsUpdatingTasks()
 
             // make references to get the widget remote view
@@ -74,6 +82,7 @@ class TaskRemoteViewsFactory(private val context: Context, intent: Intent?)
 
             Log.d(TAG, "Partially updating widget")
             appWidgetManager.partiallyUpdateAppWidget(widgetId, remoteView)
+             */
 
         }
     }

@@ -10,7 +10,7 @@
         android:layout_height="wrap_content"
         android:paddingBottom="2dp"
         android:contentDescription="Today's date"
-        android:text="Sun: Dec 31, 2000"
+        android:text="Sun, Dec 31, 2000"
         android:textSize="12sp"
         android:textStyle="italic"
         android:layout_alignParentStart="true"

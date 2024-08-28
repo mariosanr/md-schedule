@@ -5,6 +5,7 @@ import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.widget.PopupWindow
+import android.widget.Toast
 import com.stillloading.mdschedule.data.TaskDisplayData
 import com.stillloading.mdschedule.databinding.PopupTaskBinding
 
@@ -13,7 +14,6 @@ class TaskPopup(private val popupBinding: PopupTaskBinding, private val context:
 
     private val width = ViewGroup.LayoutParams.MATCH_PARENT
     private val height = ViewGroup.LayoutParams.MATCH_PARENT
-    private var maxHeight = 1900
     private val focusable = true
 
     fun show(task: TaskDisplayData, view: View){
@@ -52,15 +52,6 @@ class TaskPopup(private val popupBinding: PopupTaskBinding, private val context:
             }
 
             tvTask.text = task.task
-
-            // FIXME necesito obtener el height de toda la aplicación, así no funciona bien
-            // set the max height for the popup box
-            scrollView.post{
-                //maxHeight = (root.height * 0.9).toInt()
-                //Toast.makeText(context, "The new max height is $maxHeight", Toast.LENGTH_LONG).show()
-                scrollView.layoutParams.height = if(scrollView.height > maxHeight) maxHeight else scrollView.height
-                mainLayout.requestLayout()
-            }
         }
 
         val popup = PopupWindow(popupBinding.root, width, height, focusable)

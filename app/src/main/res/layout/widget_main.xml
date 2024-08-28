@@ -8,27 +8,12 @@
     android:theme="@style/Theme.AppCompat.DayNight.DarkActionBar.AppWidgetContainer">
 
     <TextView
-        android:id="@+id/appwidget_text"
-        style="@style/Widget.MarkdownSchedule.AppWidget.InnerView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_centerVertical="true"
-        android:layout_margin="8dp"
-        android:text="@string/appwidget_text"
-        android:textSize="24sp"
-        android:textStyle="bold|italic"
-        android:visibility="gone" />
-
-    <TextView
         android:id="@+id/tvWidgetDate"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:paddingBottom="2dp"
         android:contentDescription="Today's date"
         android:text="@string/loading"
         android:textSize="20sp"
-        android:textStyle="italic"
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"/>
         <!-- android:layout_toStartOf="@id/ibRefresh" -->
@@ -51,12 +36,23 @@
         tools:ignore="UseAppTint" />
     -->
 
+    <TextView
+        android:id="@+id/tvWidgetLastUpdated"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/tvWidgetDate"
+        android:contentDescription="Last updated"
+        android:text="@string/loading"
+        android:textSize="14sp"
+        android:textStyle="italic"
+        />
+
 
     <TextView
         android:id="@+id/tvWidgetTasksNone"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/tvWidgetDate"
+        android:layout_below="@id/tvWidgetLastUpdated"
         android:paddingBottom="5dp"
         android:text="@string/widgetTasksNone"
         android:textSize="16sp"
@@ -66,13 +62,14 @@
         android:id="@+id/lvWidgetTaskList"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/tvWidgetDate"
+        android:layout_below="@id/tvWidgetLastUpdated"
         android:paddingTop="3dp"
         >
 
 
     </ListView>
 
+    <!--
     <ProgressBar
         android:id="@+id/pbWidgetLoadingWheel"
         android:layout_width="wrap_content"
@@ -81,4 +78,6 @@
         android:layout_centerVertical="true"
         android:visibility="gone"
         />
+    -->
+
 </RelativeLayout>

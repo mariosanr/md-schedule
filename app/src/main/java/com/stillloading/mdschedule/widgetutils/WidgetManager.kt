@@ -36,9 +36,16 @@ class WidgetManager() {
         val rootView = RemoteViews(context.packageName, R.layout.widget_main)
         rootView.setTextViewText(R.id.tvWidgetDate, getTodaysDate())
 
+        val lastUpdated = getLastUpdated(context)
+        if(lastUpdated != null){
+            rootView.setViewVisibility(R.id.tvWidgetLastUpdated, View.VISIBLE)
+            rootView.setTextViewText(R.id.tvWidgetLastUpdated, lastUpdated)
+        }else{
+            rootView.setViewVisibility(R.id.tvWidgetLastUpdated, View.GONE)
+        }
+
         rootView.setViewVisibility(R.id.tvWidgetTasksNone, View.GONE)
 
-        /* removed because the content observer stops working if you enter the app from clicking the widget. Still dont know the solution
         // set on click action to the widget's background (start the app)
         val openAppPendingIntent = PendingIntent.getActivity(
             context,
@@ -47,7 +54,6 @@ class WidgetManager() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         rootView.setOnClickPendingIntent(R.id.mainWidgetLayout, openAppPendingIntent)
-         */
 
 
         /* removed the refresh button on widget until updating is done entirely through work manager
@@ -93,8 +99,13 @@ class WidgetManager() {
     }
 
     private fun getTodaysDate(): String {
-        val formattedDate = LocalDate.now().format(DateTimeFormatter.ofPattern("EEE: MMM d, uuuu"))
+        val formattedDate = LocalDate.now().format(DateTimeFormatter.ofPattern("EEE, MMM d, uuuu"))
         return formattedDate
+    }
+
+    private fun getLastUpdated(context: Context): String?{
+        val contentProviderParser = ContentProviderParser(context = context.applicationContext)
+        return contentProviderParser.getLastUpdatedString()
     }
 
 

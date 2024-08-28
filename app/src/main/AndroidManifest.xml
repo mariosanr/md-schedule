@@ -15,6 +15,7 @@
     <uses-permission android:name="com.stillloading.mdschedule.provider.READ_PROVIDER"/>
 
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM"/>
 
 
     <application
