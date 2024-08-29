@@ -19,8 +19,14 @@ class TaskDisplayManager(private val settings: SettingsData) {
     private val dateFormatter = DateTimeFormatter.ofPattern("MMM d")
     private val dateFormatterYear = DateTimeFormatter.ofPattern("MMM d, uuuu")
 
-    fun getWidgetTasks(tasks: MutableList<Task>, date: String): MutableList<TaskWidgetDisplayData>{
-        // First order the tasks
+    fun getWidgetTasks(tasksParam: MutableList<Task>, date: String): MutableList<TaskWidgetDisplayData>{
+        // implement the day planner tasks in widget setting
+        val tasks: MutableList<Task> = mutableListOf()
+        for(task in tasksParam){
+            if(!settings.dayPlannerWidgetEnabled && task.isDayPlanner) continue
+            tasks.add(task)
+        }
+
         // Order of task groups: Time tasks > Non time tasks > Day Planner Tasks
         // Each task group is ordered by priority
         // Time tasks are ordered by lowest startTime > lowest endTime

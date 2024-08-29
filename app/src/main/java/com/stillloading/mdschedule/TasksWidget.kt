@@ -48,7 +48,7 @@ class TasksWidget : AppWidgetProvider() {
     private var handler: Handler? = null
     private var handlerThread: HandlerThread? = null
 
-    private var contentProviderParser: ContentProviderParser? = null
+    //private var contentProviderParser: ContentProviderParser? = null
 
     override fun onUpdate(
         context: Context,

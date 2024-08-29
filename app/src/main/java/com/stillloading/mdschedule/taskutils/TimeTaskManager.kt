@@ -200,7 +200,7 @@ class TimeTaskManager (
         val minutesString = match?.get("minutes")?.value
 
         var hour: Int? = null
-        var minutes: Float = 0f
+        var minutes = 0f
 
         if(hourString!= null){
             hour = hourString.toInt()

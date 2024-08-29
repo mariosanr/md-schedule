@@ -18,10 +18,12 @@ import com.stillloading.mdschedule.TasksWidget
 import com.stillloading.mdschedule.backgroundutils.UpdateTasksWorker
 import com.stillloading.mdschedule.data.DirectoryData
 import com.stillloading.mdschedule.data.SettingsDisplayData
+import com.stillloading.mdschedule.data.SkipDirectoryData
 import com.stillloading.mdschedule.data.Task
 import com.stillloading.mdschedule.data.TaskDisplayData
 import com.stillloading.mdschedule.data.TaskPriority
 import com.stillloading.mdschedule.data.TaskWidgetDisplayData
+import com.stillloading.mdschedule.data.UpdateTimesData
 import com.stillloading.mdschedule.data.toContentValues
 import com.stillloading.mdschedule.data.toSettingsData
 import com.stillloading.mdschedule.taskutils.TaskDisplayManager
@@ -50,6 +52,11 @@ class ContentProviderParser(
 
             val directoriesKey = ScheduleProviderContract.SETTINGS.DIRECTORIES
             val tasksTagKey = ScheduleProviderContract.SETTINGS.TASKS_TAG
+            val notificationsEnabledKey = ScheduleProviderContract.SETTINGS.NOTIFICATIONS_ENABLED
+            val dayPlannerNotificationsEnabledKey = ScheduleProviderContract.SETTINGS.DAY_PLANNER_NOTIFICATIONS_ENABLED
+            val updateTimesKey = ScheduleProviderContract.SETTINGS.UPDATE_TIMES
+            val inProgressTasksEnabled = ScheduleProviderContract.SETTINGS.IN_PROGRESS_TASKS_ENABLED
+            val dayPlannerWidgetEnabled = ScheduleProviderContract.SETTINGS.DAY_PLANNER_WIDGET_ENABLED
             val skipDirectoriesKey = ScheduleProviderContract.SETTINGS.SKIP_DIRECTORIES
 
             while(moveToNext()){
@@ -69,8 +76,23 @@ class ContentProviderParser(
                     key == tasksTagKey -> {
                         settings.tasksTag = value
                     }
+                    key == notificationsEnabledKey -> {
+                        settings.notificationsEnabled = value.toBoolean()
+                    }
+                    key == dayPlannerNotificationsEnabledKey -> {
+                        settings.dayPlannerNotificationsEnabled = value.toBoolean()
+                    }
+                    key == updateTimesKey && value != ""-> {
+                        settings.updateTimes = value.split(",").map { UpdateTimesData(it) }.toMutableList()
+                    }
+                    key == inProgressTasksEnabled -> {
+                        settings.inProgressTasksEnabled = value.toBoolean()
+                    }
+                    key == dayPlannerWidgetEnabled -> {
+                        settings.dayPlannerWidgetEnabled = value.toBoolean()
+                    }
                     key == skipDirectoriesKey && value != "" -> {
-                        settings.skipDirectories = value.split(",").toMutableList()
+                        settings.skipDirectories = value.split(",").map { SkipDirectoryData(it) }.toMutableList()
                     }
                     else -> {}
                 }

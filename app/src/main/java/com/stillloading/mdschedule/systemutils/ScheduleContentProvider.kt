@@ -12,6 +12,7 @@ import com.stillloading.mdschedule.data.SettingsFlowData
 import com.stillloading.mdschedule.data.toSettingsData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.runBlocking
 import java.time.LocalDateTime
 
@@ -34,6 +35,11 @@ object ScheduleProviderContract{
 
         const val DIRECTORIES = "directories"
         const val TASKS_TAG = "tasks_tag"
+        const val NOTIFICATIONS_ENABLED = "notifications_enabled"
+        const val DAY_PLANNER_NOTIFICATIONS_ENABLED = "day_planner_notifications_enabled"
+        const val UPDATE_TIMES = "update_times"
+        const val IN_PROGRESS_TASKS_ENABLED = "in_progress_tasks_enabled"
+        const val DAY_PLANNER_WIDGET_ENABLED = "day_planner_widget_enabled"
         const val SKIP_DIRECTORIES = "skip_directories"
     }
 
@@ -126,6 +132,8 @@ class ScheduleContentProvider : ContentProvider() {
                     val cursor = MatrixCursor(arrayOf("key", "value"))
 
                     val settingsMap = fileSystemManager.getSettingsMap(settingsFlowData)
+
+
                     settingsMap.forEach { (key, value) ->
                         cursor.addRow(arrayOf(key, value))
                     }

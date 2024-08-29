@@ -1,42 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@drawable/rectangle_settings_item"
     android:layout_marginTop="8dp"
+    android:paddingVertical="6dp"
     >
 
-    <HorizontalScrollView
+    <EditText
+        android:id="@+id/etSkipDirectory"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
-        android:layout_toStartOf="@id/ibRemoveDirectory"
-        >
-
-        <TextView
-            android:id="@+id/tvDirectory"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/example"
-            android:textColor="@color/unchecked_text"
-            android:textSize="16sp"
-            android:paddingTop="16dp"
-            android:paddingBottom="16dp"
-            android:paddingStart="16dp"
-            android:paddingEnd="8dp"
-            android:singleLine="true"
-            android:scrollHorizontally="true"
-            />
-    </HorizontalScrollView>
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="14dp"
+        android:paddingStart="6dp"
+        android:layout_toStartOf="@id/ibRemoveSkipDirectory"
+        android:importantForAutofill="no"
+        android:hint="@string/skipDirectoriesHint"
+        android:inputType="text"
+        android:textSize="16sp"
+        android:textColor="@color/unchecked_text"
+        android:textColorHint="@color/semi_transparent_grey"
+        tools:ignore="RtlSymmetry"
+        />
 
     <ImageButton
-        android:id="@+id/ibRemoveDirectory"
+        android:id="@+id/ibRemoveSkipDirectory"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentEnd="true"
         android:layout_centerVertical="true"
+        android:layout_alignParentEnd="true"
         android:layout_marginEnd="8dp"
         android:background="@color/transparent"
         android:contentDescription="@string/removeButtonDescription"

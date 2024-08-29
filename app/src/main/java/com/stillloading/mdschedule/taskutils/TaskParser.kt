@@ -22,8 +22,6 @@ import java.time.format.DateTimeParseException
 class TaskParser(private val context: Context, private val settings: SettingsData) {
 
     private val TAG = "Md Companion Debug"
-    //private val tasksTag = settings.getString("tasks_tag")
-    //private var skipDirectories = JSONArray(settings.getString("skip_directories"))
 
 
     private val tasksRegEx = Regex("^\\s*- \\[.].+${settings.tasksTag}")
@@ -47,7 +45,7 @@ class TaskParser(private val context: Context, private val settings: SettingsDat
         return withContext(Dispatchers.IO){
             val (files, todaysFile) = getAllFiles(startingUri, date)
             val (rawTasks, rawDayPlannerTasks) = searchFiles(files, todaysFile)
-            if(rawTasks.size > 0){
+            if(rawTasks.size > 0 || rawDayPlannerTasks.size > 0){
                 return@withContext parseTasks(rawTasks, rawDayPlannerTasks, date)
             }
             return@withContext mutableListOf()
@@ -312,6 +310,7 @@ class TaskParser(private val context: Context, private val settings: SettingsDat
 
 
     private fun taskIsInProgress(date: LocalDate, startDate: String?, dueDate: String?): Boolean{
+        if(!settings.inProgressTasksEnabled) return false
         if((startDate == null) or (dueDate == null)) return false
 
         return try{

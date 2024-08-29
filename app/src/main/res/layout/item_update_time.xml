@@ -7,32 +7,25 @@
     android:layout_marginTop="8dp"
     >
 
-    <HorizontalScrollView
-        android:layout_width="match_parent"
+    <TextView
+        android:id="@+id/tvUpdateTime"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
-        android:layout_toStartOf="@id/ibRemoveDirectory"
-        >
-
-        <TextView
-            android:id="@+id/tvDirectory"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/example"
-            android:textColor="@color/unchecked_text"
-            android:textSize="16sp"
-            android:paddingTop="16dp"
-            android:paddingBottom="16dp"
-            android:paddingStart="16dp"
-            android:paddingEnd="8dp"
-            android:singleLine="true"
-            android:scrollHorizontally="true"
-            />
-    </HorizontalScrollView>
+        android:layout_toStartOf="@id/ibRemoveTime"
+        android:textColor="@color/unchecked_text"
+        android:textSize="16sp"
+        android:paddingTop="16dp"
+        android:paddingBottom="16dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="8dp"
+        android:singleLine="true"
+        android:scrollHorizontally="true"
+        />
 
     <ImageButton
-        android:id="@+id/ibRemoveDirectory"
+        android:id="@+id/ibRemoveTime"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentEnd="true"
