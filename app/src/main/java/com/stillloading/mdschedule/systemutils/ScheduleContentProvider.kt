@@ -6,14 +6,11 @@ import android.content.UriMatcher
 import android.database.Cursor
 import android.database.MatrixCursor
 import android.net.Uri
-import android.provider.BaseColumns
-import android.util.Log
 import com.stillloading.mdschedule.backgroundutils.TaskAlarmManager
 import com.stillloading.mdschedule.data.SettingsFlowData
 import com.stillloading.mdschedule.data.toSettingsData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.runBlocking
 import java.time.LocalDateTime
 
@@ -146,7 +143,6 @@ class ScheduleContentProvider : ContentProvider() {
                 }
             }
             2 -> { // tasks
-                Log.d(TAG, "Retrieving all tasks")
                 taskDao.getAll()
             }
             3 -> {
@@ -159,7 +155,6 @@ class ScheduleContentProvider : ContentProvider() {
                 }
             }
             4 -> {
-                Log.d(TAG, "Retrieving updating var")
                 val cursor = MatrixCursor(arrayOf(ScheduleProviderContract.UPDATING_TASKS.COLUMN_UPDATING)).apply {
                     addRow(arrayOf(updatingDB.toString()))
                 }
@@ -213,7 +208,6 @@ class ScheduleContentProvider : ContentProvider() {
                 ScheduleProviderContract.CODE_SUCCESS
             }
             2 -> { // tasks
-                Log.d(TAG, "Entered updating tasks")
                 if(!updatingDB){
                     updatingDB = true
                     context?.contentResolver?.notifyChange(ScheduleProviderContract.UPDATING_TASKS.CONTENT_URI, null)
@@ -225,7 +219,6 @@ class ScheduleContentProvider : ContentProvider() {
                             val settings = fileSystemManager.getSettingsData(settingsFlowData)
 
                             val taskCount = taskDao.getCount()
-                            Log.i(TAG, "Task count: $taskCount")
                             fileSystemManager.cancelTaskNotifications(taskCount, taskAlarmManager)
 
                             val tasksArray = fileSystemManager.getTasksArray(settings, date)

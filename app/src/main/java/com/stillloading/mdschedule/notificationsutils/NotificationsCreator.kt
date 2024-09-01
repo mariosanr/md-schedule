@@ -5,7 +5,6 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.os.SystemClock
 import androidx.core.app.NotificationCompat
 import com.stillloading.mdschedule.MainActivity
 import com.stillloading.mdschedule.R
@@ -24,6 +23,7 @@ class NotificationsCreator(private val appContext: Context) {
             }
         }
 
+        /*
         object ForegroundService{
 
             object Channel{
@@ -35,6 +35,7 @@ class NotificationsCreator(private val appContext: Context) {
             const val NOTIFICATION_ID = 0
             const val CONTENT_TITLE = "Markdown Schedule is updating"
         }
+         */
     }
 
     private val permissionManager = PermissionManager(appContext)

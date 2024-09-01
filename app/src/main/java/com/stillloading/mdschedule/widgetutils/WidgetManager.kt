@@ -5,15 +5,12 @@ import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.util.Log
 import android.view.View
 import android.widget.RemoteViews
 import com.stillloading.mdschedule.MainActivity
 import com.stillloading.mdschedule.R
 import com.stillloading.mdschedule.TasksWidget
 import com.stillloading.mdschedule.systemutils.ContentProviderParser
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -32,7 +29,6 @@ class WidgetManager() {
         appWidgetManager: AppWidgetManager,
         appWidgetId: Int
 ){
-        Log.i(TAG, "Updating Widget")
         val rootView = RemoteViews(context.packageName, R.layout.widget_main)
         rootView.setTextViewText(R.id.tvWidgetDate, getTodaysDate())
 

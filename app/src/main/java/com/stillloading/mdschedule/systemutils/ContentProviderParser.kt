@@ -8,14 +8,7 @@ import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
 import androidx.core.database.getStringOrNull
-import androidx.work.BackoffPolicy
-import androidx.work.OneTimeWorkRequest
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
-import androidx.work.WorkRequest
-import androidx.work.workDataOf
 import com.stillloading.mdschedule.TasksWidget
-import com.stillloading.mdschedule.backgroundutils.UpdateTasksWorker
 import com.stillloading.mdschedule.data.DirectoryData
 import com.stillloading.mdschedule.data.SettingsDisplayData
 import com.stillloading.mdschedule.data.SkipDirectoryData
@@ -33,7 +26,6 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
-import java.util.concurrent.TimeUnit
 
 class ContentProviderParser(
     private val context: Context

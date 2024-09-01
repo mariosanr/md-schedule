@@ -8,15 +8,8 @@ import android.content.Intent
 import android.database.ContentObserver
 import android.os.Handler
 import android.os.HandlerThread
-import android.util.Log
-import com.stillloading.mdschedule.systemutils.ContentProviderParser
 import com.stillloading.mdschedule.systemutils.ScheduleProviderContract
 import com.stillloading.mdschedule.widgetutils.WidgetManager
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.launch
-import java.time.LocalDate
 
 
 // FIXME the content observer stops receiving the on change updates eventually, seems like no matter what I change

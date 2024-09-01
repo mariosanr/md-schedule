@@ -3,14 +3,11 @@ package com.stillloading.mdschedule
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
-import android.app.AlarmManager
 import android.app.TimePickerDialog
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.view.MenuItem
 import android.view.View
 import android.widget.Button
@@ -22,7 +19,6 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.ActionBar
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -31,7 +27,6 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.stillloading.mdschedule.backgroundutils.PermissionManager
 import com.stillloading.mdschedule.data.DirectoryData
 import com.stillloading.mdschedule.data.SettingsDisplayData
@@ -159,8 +154,6 @@ class SettingsMenu : AppCompatActivity() {
         // Check for the freshest data.
         contentResolver.takePersistableUriPermission(uri, takeFlags)
 
-
-        Log.d(TAG, "addPath: $uri")
 
         val path: String = uri.path.toString().substringAfter(":")
         directoryAdapter.addItem(DirectoryData(uri, path))

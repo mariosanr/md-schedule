@@ -5,7 +5,6 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.stillloading.mdschedule.data.UpdateTimesData
 import com.stillloading.mdschedule.databinding.ItemUpdateTimeBinding
-import kotlinx.coroutines.channels.ReceiveChannel
 
 class UpdateTimesAdapter(
     var updateTimesList: MutableList<UpdateTimesData>

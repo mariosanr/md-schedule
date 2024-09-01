@@ -3,8 +3,6 @@ package com.stillloading.mdschedule.backgroundutils
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.util.Log
-import java.time.LocalDate
 
 class BootReceiver : BroadcastReceiver() {
 
@@ -14,7 +12,7 @@ class BootReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         if(intent.action == BOOT_COMPLETED_ACTION){
-            TaskWorkersManager(context.applicationContext).callRestartSettingsWorker()
+            TaskWorkersManager(context.applicationContext).callRebootWorkers()
         }
     }
 }

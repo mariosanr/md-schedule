@@ -2,7 +2,6 @@ package com.stillloading.mdschedule.settingsutils
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.core.widget.doAfterTextChanged
 import androidx.recyclerview.widget.RecyclerView
 import com.stillloading.mdschedule.data.SkipDirectoryData
 import com.stillloading.mdschedule.databinding.ItemSkipDirectoryBinding

@@ -8,6 +8,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkRequest
 import androidx.work.workDataOf
+import java.time.LocalDate
 import java.util.concurrent.TimeUnit
 
 class TaskWorkersManager(private val appContext: Context) {
@@ -34,16 +35,30 @@ class TaskWorkersManager(private val appContext: Context) {
         workManager.enqueue(updateTasksWorkRequest)
     }
 
-    fun callRestartSettingsWorker(){
+    fun callRebootWorkers(){
         val workManager = WorkManager.getInstance(appContext)
 
         val restartSettingsWorkRequest = OneTimeWorkRequest.from(RestartSettingsWorker::class.java)
 
-        workManager.enqueueUniqueWork(
+        val date = LocalDate.now().toString()
+
+        val updateTasksWorkRequest: OneTimeWorkRequest =
+            OneTimeWorkRequestBuilder<UpdateTasksWorker>()
+                .setInputData(
+                    workDataOf(
+                        "date" to date
+                    )
+                )
+                .build()
+
+        workManager
+            .beginUniqueWork(
             "mdschedule_restart_settings_work",
             ExistingWorkPolicy.KEEP,
             restartSettingsWorkRequest
-        )
+            )
+            .then(updateTasksWorkRequest)
+            .enqueue()
     }
 
 }

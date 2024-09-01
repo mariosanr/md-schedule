@@ -1,13 +1,8 @@
 package com.stillloading.mdschedule.backgroundutils
 
 import android.content.Context
-import android.content.pm.ServiceInfo
-import android.os.Build
-import android.util.Log
 import androidx.work.CoroutineWorker
-import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
-import com.stillloading.mdschedule.notificationsutils.NotificationsCreator
 import com.stillloading.mdschedule.systemutils.ContentProviderParser
 
 

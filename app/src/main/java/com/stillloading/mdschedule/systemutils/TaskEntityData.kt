@@ -1,10 +1,8 @@
 package com.stillloading.mdschedule.systemutils
 
-import android.net.Uri
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.stillloading.mdschedule.data.TaskPriority
 
 @Entity(tableName = "tasks")
 data class TaskEntityData(

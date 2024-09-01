@@ -5,11 +5,6 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
-import android.os.Build
-import android.util.Log
-import androidx.core.view.ContentInfoCompat.Flags
-import com.stillloading.mdschedule.notificationsutils.NotificationsCreator
 import com.stillloading.mdschedule.systemutils.TaskEntityData
 import com.stillloading.mdschedule.taskutils.TaskDisplayManager
 import java.time.LocalTime
@@ -82,8 +77,6 @@ class TaskAlarmManager(private val appContext: Context) {
            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        Log.d(TAG, "Setting alarm pending intent for $hour:$minutes")
-
         alarmManager?.setAndAllowWhileIdle(
             AlarmManager.RTC_WAKEUP,
             calendar.timeInMillis,
@@ -93,16 +86,14 @@ class TaskAlarmManager(private val appContext: Context) {
     }
 
     fun cancelAllUpdateAlarms(updateTimesCount: Int){
-        Log.i(TAG, "Cancelling update alarms")
+        val intent = getUpdateAlarmIntent()
         for(i in 0..<updateTimesCount){
-            val intent = getUpdateAlarmIntent()
             cancelAlarm(i, intent)
         }
     }
 
 
     fun createAllUpdateAlarms(updateTimes: List<String>){
-        Log.i(TAG, "Creating update alarms")
         for(i in 0..<updateTimes.size){
             val intent = getUpdateAlarmIntent(i, updateTimes[i])
             setUpdateAlarmIntent(i, updateTimes[i], intent)
@@ -165,14 +156,12 @@ class TaskAlarmManager(private val appContext: Context) {
 
 
         if(permissionManager.hasExactAlarmPermission(alarmManager)){
-            Log.d(TAG, "Setting exact notification pending intent for $hour:$minutes")
             alarmManager?.setExactAndAllowWhileIdle(
                 AlarmManager.RTC_WAKEUP,
                 calendar.timeInMillis,
                 pendingIntent
             )
         }else{
-            Log.d(TAG, "Setting inexact notification pending intent for $hour:$minutes")
             alarmManager?.setAndAllowWhileIdle(
                 AlarmManager.RTC_WAKEUP,
                 calendar.timeInMillis,
@@ -184,16 +173,14 @@ class TaskAlarmManager(private val appContext: Context) {
     }
 
     fun cancelAllNotificationAlarmIntent(tasksCount: Int){
-        Log.i(TAG, "Cancelling notifications alarms")
-        for(i in 0..<tasksCount){
-            val intent = getNotificationAlarmIntent()
+        val intent = getNotificationAlarmIntent()
+        for(i in 0..tasksCount + 10){ // add 10 as an extra measure to make sure they are all cancelled
             cancelAlarm(i, intent)
         }
 
     }
 
     fun createAllNotificationAlarmIntent(tasks: MutableList<TaskEntityData>, taskDisplayManager: TaskDisplayManager){
-        Log.i(TAG, "Creating notifications alarms")
         for(i in 0..<tasks.size){
             if(tasks[i].evStartTime != null){
                 val intent = getNotificationAlarmIntent(tasks[i], taskDisplayManager)
@@ -207,8 +194,8 @@ class TaskAlarmManager(private val appContext: Context) {
     // For use of both alarm types
 
     private fun cancelAlarm(requestCode: Int, intent: Intent){
-        val pendingIntent = PendingIntent.getService(appContext, requestCode, intent,
-            PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        val pendingIntent = PendingIntent.getBroadcast(appContext, requestCode, intent,
+            PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE)
 
         if(pendingIntent != null && alarmManager != null){
             alarmManager.cancel(pendingIntent)

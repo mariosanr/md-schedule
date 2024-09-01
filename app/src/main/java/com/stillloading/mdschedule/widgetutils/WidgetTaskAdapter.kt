@@ -5,19 +5,13 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Paint
 import android.os.Bundle
-import android.util.Log
-import android.view.View
 import android.widget.RemoteViews
 import android.widget.RemoteViewsService
-import androidx.core.content.IntentCompat
 import com.stillloading.mdschedule.R
 import com.stillloading.mdschedule.data.TaskWidgetDisplayData
 import com.stillloading.mdschedule.systemutils.ContentProviderParser
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import kotlin.properties.Delegates
 
 class TasksWidgetService : RemoteViewsService(){
     override fun onGetViewFactory(intent: Intent?): RemoteViewsFactory {
@@ -43,8 +37,6 @@ class TaskRemoteViewsFactory(private val context: Context, intent: Intent?)
 
     override fun onDataSetChanged() {
         runBlocking(Dispatchers.Main) {
-            Log.i(TAG, "On Data Set Changed")
-
 
             contentProviderParser.getWidgetTasks().let { newList ->
                 tasks.clear()
@@ -91,7 +83,7 @@ class TaskRemoteViewsFactory(private val context: Context, intent: Intent?)
 
     override fun getCount(): Int = tasks.size
 
-    // TODO MAYBE open the app with the popup of the task on click
+
     override fun getViewAt(position: Int): RemoteViews {
         if(count == 0){
             tasks.add(TaskWidgetDisplayData(

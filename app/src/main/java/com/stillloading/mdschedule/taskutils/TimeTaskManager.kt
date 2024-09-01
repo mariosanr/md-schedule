@@ -216,7 +216,6 @@ class TimeTaskManager (
         if(isChecked){
             // Checked card
             tvTask.paintFlags = tvTask.paintFlags or STRIKE_THRU_TEXT_FLAG
-            // TODO cambiar esto a una referencia de color en vez del color hard coded
             tvTask.setTextColor(context.getColor(R.color.checked_text))
             rlTaskList.setBackgroundResource(R.drawable.task_background_checked)
             //rlTaskList.setBackgroundColor(context.getColor(R.color.checked_card))

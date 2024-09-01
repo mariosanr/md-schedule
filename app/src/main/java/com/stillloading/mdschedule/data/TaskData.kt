@@ -29,8 +29,3 @@ data class TaskDates (
     var evEndTime: String? = null
 )
 
-data class UnParsedTask(
-    val fileTitle: String?,
-    val task: String,
-    val uri: Uri
-)

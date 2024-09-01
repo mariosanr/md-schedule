@@ -192,7 +192,7 @@ class TaskDisplayManager(private val settings: SettingsData) {
         }
     }
 
-    // FIXME Hacer con un map con todos los bindings para que pueda agregar los custom
+    // TODO make a map available through the settings to set custom statuses
     private fun getStatusName(status: String?): String{
         return when (status){
             " " -> "To Do"
@@ -229,7 +229,6 @@ class TaskDisplayManager(private val settings: SettingsData) {
         }
     }
 
-    // TODO cambiar el formato de las fechas en las que las mostramos en las dos funciones de abajo
     private fun getDateString(date: String?): String{
         if(date == null) return "N/A"
 

@@ -2,7 +2,6 @@ package com.stillloading.mdschedule.systemutils
 
 import android.content.Context
 import android.net.Uri
-import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
@@ -13,7 +12,6 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.stillloading.mdschedule.backgroundutils.TaskAlarmManager
 import com.stillloading.mdschedule.data.SettingsData
 import com.stillloading.mdschedule.data.SettingsFlowData
-import com.stillloading.mdschedule.data.Task
 import com.stillloading.mdschedule.taskutils.TaskDisplayManager
 import com.stillloading.mdschedule.taskutils.TaskParser
 import kotlinx.coroutines.async
@@ -22,7 +20,6 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.runBlocking
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -225,7 +222,7 @@ class FileSystemManager(
             async { taskParser.getTasks(LocalDate.parse(date), directory) }
         }
 
-        var uid: Int = 1
+        var uid = 1
         val dbTasks = mutableListOf<TaskEntityData>()
 
         val tasks = tasksDeferredResult.awaitAll().flatten()
