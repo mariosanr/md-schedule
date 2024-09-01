@@ -10,8 +10,11 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.stillloading.mdschedule.backgroundutils.TaskAlarmManager
 import com.stillloading.mdschedule.data.SettingsData
 import com.stillloading.mdschedule.data.SettingsFlowData
+import com.stillloading.mdschedule.data.Task
+import com.stillloading.mdschedule.taskutils.TaskDisplayManager
 import com.stillloading.mdschedule.taskutils.TaskParser
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -182,6 +185,33 @@ class FileSystemManager(
         context.dataStore.edit { settings ->
             settings[lastUpdatedKey] = dateTime.toString() // maybe I should set a formatter to be sure
         }
+    }
+
+
+    fun cancelUpdateTimes(settings: SettingsData, taskAlarmManager: TaskAlarmManager){
+        taskAlarmManager.cancelAllUpdateAlarms(settings.updateTimes.size)
+    }
+
+    fun setUpdateTimes(settings: SettingsData, taskAlarmManager: TaskAlarmManager){
+        taskAlarmManager.createAllUpdateAlarms(settings.updateTimes.toList())
+    }
+
+    fun cancelTaskNotifications(tasksSize: Int, taskAlarmManager: TaskAlarmManager){
+        taskAlarmManager.cancelAllNotificationAlarmIntent(tasksSize)
+
+    }
+
+    fun setTaskNotifications(tasks: Array<TaskEntityData>, settings: SettingsData, taskAlarmManager: TaskAlarmManager){
+        if(settings.notificationsEnabled && settings.dayPlannerNotificationsEnabled){
+            taskAlarmManager.createAllNotificationAlarmIntent(tasks.toMutableList(), TaskDisplayManager(settings))
+        }else if(settings.notificationsEnabled){
+            val tasksList = mutableListOf<TaskEntityData>()
+            for(task in tasks){
+                if(!task.isDayPlanner.toBoolean()) tasksList.add(task)
+            }
+            taskAlarmManager.createAllNotificationAlarmIntent(tasksList, TaskDisplayManager(settings))
+        }
+
     }
 
 

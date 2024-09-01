@@ -17,6 +17,7 @@
     <string name="action_settings">Settings</string>
     <string name="action_reload">Reload</string>
 
+    <string name="settingsHeader">After changing any setting, please refresh the tasks to ensure that changes have been applied.</string>
 
     <string name="pathsTitle"><u>Folder Paths</u></string>
     <string name="pathsSubtitle">Add all the folders where you want to look for tasks. The search is recursive, meaning that it will look through all subfolders too.
@@ -29,15 +30,19 @@
 
     <string name="notificationsTitle"><u>Notifications</u></string>
     <string name="notificationsSubtitle">Enable to get notifications on tasks.</string>
+    <string name="notificationsSubtitleNewerVersions">Enable to get notifications on tasks.
+        \n<b><i>In order to get notifications on time, please activate alarms and reminders.
+        \nYou can find it by going to Settings>Apps>MD Schedule>Alarms &amp; reminders>Allow setting alarms and reminders.</i></b></string>
 
     <string name="dayPlannerNotificationsTitle"><u>Notifications for Static Tasks</u></string>
     <string name="dayPlannerNotificationsSubtitle">Enable to get notifications on tasks of the form:
         \n- 07:00 - 08:00 Get ready.</string>
 
     <string name="updateTimesTitle"><u>Update Times</u></string>
-    <string name="updateTimesSubtitle">Tasks are going to be automatically updated every day at these times.
+    <string name="updateTimesSubtitle">Tasks are going to be automatically updated every day around these times.
         You can always update them manually by clicking the refresh button.
-        \n<i>Keep in mind: The updates may happen after the scheduled time.</i></string>
+        \n<i>Keep in mind: The updates may happen long after the scheduled time, especially if the device is idle.
+            Please do not rely solely on the automatic updates; check the last updated time to make sure it has been updated.</i></string>
     <string name="updateTimesButton">Add time</string>
 
     <string name="inProgressTasksTitle"><u>Get \'In Progress\' Tasks</u></string>

@@ -8,6 +8,7 @@ import android.database.MatrixCursor
 import android.net.Uri
 import android.provider.BaseColumns
 import android.util.Log
+import com.stillloading.mdschedule.backgroundutils.TaskAlarmManager
 import com.stillloading.mdschedule.data.SettingsFlowData
 import com.stillloading.mdschedule.data.toSettingsData
 import kotlinx.coroutines.Dispatchers
@@ -88,6 +89,7 @@ class ScheduleContentProvider : ContentProvider() {
     private val TAG = "ScheduleContentProvider"
 
     private lateinit var fileSystemManager: FileSystemManager
+    private lateinit var taskAlarmManager: TaskAlarmManager
 
     //Room database
     private lateinit var taskDatabase: TaskDatabase
@@ -101,6 +103,7 @@ class ScheduleContentProvider : ContentProvider() {
 
     override fun onCreate(): Boolean {
         fileSystemManager = FileSystemManager(context!!)
+        taskAlarmManager = TaskAlarmManager(context!!.applicationContext)
 
         taskDatabase = TaskDatabase.getDatabase(context!!)
         /*
@@ -191,7 +194,19 @@ class ScheduleContentProvider : ContentProvider() {
         return when(uriMatcher.match(uri)){
             1 -> { // settings
                 runBlocking(Dispatchers.IO){
-                    values?.toSettingsData()?.let { fileSystemManager.saveSettings(it) }
+                    if(values != null){
+                        fileSystemManager.cancelUpdateTimes(
+                            fileSystemManager.getSettingsData(settingsFlowData),
+                            taskAlarmManager
+                        )
+
+                        values.toSettingsData().let { fileSystemManager.saveSettings(it) }
+                    }
+
+                    fileSystemManager.setUpdateTimes(
+                        fileSystemManager.getSettingsData(settingsFlowData),
+                        taskAlarmManager
+                    )
                 }
 
                 context?.contentResolver?.notifyChange(uri, null)
@@ -202,7 +217,6 @@ class ScheduleContentProvider : ContentProvider() {
                 if(!updatingDB){
                     updatingDB = true
                     context?.contentResolver?.notifyChange(ScheduleProviderContract.UPDATING_TASKS.CONTENT_URI, null)
-                    Log.d(TAG, "Updating tasks and notified of change")
 
 
                     runBlocking(Dispatchers.IO) {
@@ -210,21 +224,23 @@ class ScheduleContentProvider : ContentProvider() {
                         if(date != null){
                             val settings = fileSystemManager.getSettingsData(settingsFlowData)
 
-                            Log.d(TAG, "Started task update function")
+                            val taskCount = taskDao.getCount()
+                            Log.i(TAG, "Task count: $taskCount")
+                            fileSystemManager.cancelTaskNotifications(taskCount, taskAlarmManager)
+
                             val tasksArray = fileSystemManager.getTasksArray(settings, date)
-                            Log.d(TAG, "Finished task update function")
 
                             // wait for the operation to complete to clear the database
                             taskDao.deleteAll()
 
                             taskDao.insertAll(*tasksArray)
                             fileSystemManager.saveLastUpdated(LocalDateTime.now())
-                            Log.d(TAG, "Inserted the new values in the database")
+
+                            fileSystemManager.setTaskNotifications(tasksArray, settings, taskAlarmManager)
                         }
                     }
                     updatingDB = false
                     context?.contentResolver?.notifyChange(ScheduleProviderContract.UPDATING_TASKS.CONTENT_URI, null)
-                    Log.d(TAG, "Finished updating and notified of change")
 
                     context?.contentResolver?.notifyChange(uri, null)
                     return ScheduleProviderContract.CODE_SUCCESS

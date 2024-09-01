@@ -1,10 +1,14 @@
 package com.stillloading.mdschedule
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.AlarmManager
 import android.app.TimePickerDialog
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.MenuItem
@@ -12,21 +16,28 @@ import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.RelativeLayout
+import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.ActionBar
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SwitchCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.stillloading.mdschedule.backgroundutils.PermissionManager
 import com.stillloading.mdschedule.data.DirectoryData
 import com.stillloading.mdschedule.data.SettingsDisplayData
 import com.stillloading.mdschedule.data.SkipDirectoryData
 import com.stillloading.mdschedule.data.UpdateTimesData
+import com.stillloading.mdschedule.notificationsutils.NotificationsCreator
 import com.stillloading.mdschedule.settingsutils.DirectoryAdapter
 import com.stillloading.mdschedule.settingsutils.SkipDirectoriesAdapter
 import com.stillloading.mdschedule.settingsutils.UpdateTimesAdapter
@@ -55,6 +66,10 @@ class SettingsMenu : AppCompatActivity() {
 
     private lateinit var rlDayPlannerNotifications: RelativeLayout
 
+    private lateinit var permissionManager: PermissionManager
+    //private var multiplePermissionLauncher: ActivityResultLauncher<Array<String>>? = null
+    private var permissionLauncher: ActivityResultLauncher<String>? = null
+
 
     private lateinit var settings: SettingsDisplayData
 
@@ -75,6 +90,11 @@ class SettingsMenu : AppCompatActivity() {
         contentProviderParser = ContentProviderParser(applicationContext)
         settings = contentProviderParser.getSettings()
 
+        val notificationsCreator = NotificationsCreator(applicationContext)
+        notificationsCreator.createTasksNotificationsChannel()
+
+        permissionManager = PermissionManager(applicationContext)
+
         initFolderPaths()
         initTasksTag()
         initDayPlannerNotifications()
@@ -86,8 +106,8 @@ class SettingsMenu : AppCompatActivity() {
     }
 
 
-    override fun onPause() {
-        super.onPause()
+    override fun onStop() {
+        super.onStop()
 
         settings.directories = directoryAdapter.directoryList
         settings.tasksTag = etTasksTag.text.toString().trim()
@@ -173,17 +193,107 @@ class SettingsMenu : AppCompatActivity() {
     private fun initNotifications(){
         switchNotifications = findViewById(R.id.switchNotifications)
 
+        if(settings.notificationsEnabled){
+            rlDayPlannerNotifications.visibility = View.VISIBLE
+        }else{
+            rlDayPlannerNotifications.visibility = View.GONE
+        }
+
+        switchNotifications.isChecked = settings.notificationsEnabled
+
+        val tvNotificationsSubtitle = findViewById<TextView>(R.id.tvNotificationsSubtitle)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            tvNotificationsSubtitle.text = resources.getText(R.string.notificationsSubtitleNewerVersions)
+        }else{
+            tvNotificationsSubtitle.text = resources.getText(R.string.notificationsSubtitle)
+        }
+
+
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU){
+            setPermissionLauncher()
+        }
+
+
         switchNotifications.setOnCheckedChangeListener { _, isChecked ->
             if(isChecked){
                 rlDayPlannerNotifications.visibility = View.VISIBLE
-                // call permission
+
+                askForPermissions()
             }else{
                 rlDayPlannerNotifications.visibility = View.GONE
             }
         }
-
-        switchNotifications.isChecked = settings.notificationsEnabled
     }
+
+    private fun askForPermissions(){
+        when{
+            permissionManager.hasNotificationsPermission() -> return
+
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> {
+                permissionLauncher?.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+    }
+
+    private fun setPermissionLauncher(){
+        permissionLauncher =
+            registerForActivityResult(ActivityResultContracts.RequestPermission()){ isGranted ->
+                if(!isGranted){
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        if(shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)){
+                            showNotificationsPermissionRationale()
+                        }else{
+                            Toast.makeText(this, "Permission denied: Can be enabled later through settings",
+                                Toast.LENGTH_LONG).show()
+                        }
+                    }
+                }
+        }
+
+    }
+
+    /*
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    private fun setMultiplePermissionLauncher(){
+        multiplePermissionLauncher =
+            registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()){ permissions ->
+                val notificationsPermissionGranted = permissions[Manifest.permission.POST_NOTIFICATIONS]
+                val exactAlarmsPermissionGranted = permissions[Manifest.permission.SCHEDULE_EXACT_ALARM]
+
+                if(notificationsPermissionGranted == false){
+                    if(shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)){
+                        showPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)
+                    }
+                }
+
+                if(exactAlarmsPermissionGranted == false){
+                    val alarmManager = applicationContext.getSystemService(Context.ALARM_SERVICE) as? AlarmManager
+
+                    if(shouldShowRequestPermissionRationale(Manifest.permission.SCHEDULE_EXACT_ALARM) &&
+                        !permissionManager.hasExactAlarmPermission(alarmManager)){
+
+                        showPermissionRationale(Manifest.permission.SCHEDULE_EXACT_ALARM)
+                    }
+                }
+            }
+
+    }
+     */
+
+    private fun showNotificationsPermissionRationale(){
+        val message = "Notifications are used to remind you of tasks with set times"
+
+        AlertDialog.Builder(this)
+            .setTitle("Permission Denied")
+            .setMessage(message)
+            .setNeutralButton("Ok"){dialog, _ ->
+                dialog.dismiss()
+            }
+            .show()
+    }
+
+
+
 
     private fun initUpdateTimes(){
         updateTimesAdapter = UpdateTimesAdapter(settings.updateTimes)

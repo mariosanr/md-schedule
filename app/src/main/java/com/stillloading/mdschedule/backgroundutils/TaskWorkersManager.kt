@@ -2,6 +2,7 @@ package com.stillloading.mdschedule.backgroundutils
 
 import android.content.Context
 import androidx.work.BackoffPolicy
+import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequest
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
@@ -11,7 +12,8 @@ import java.util.concurrent.TimeUnit
 
 class TaskWorkersManager(private val appContext: Context) {
 
-    private fun callUpdateTasksWorker(date: String){
+
+    fun callUpdateTasksWorker(date: String){
         val workManager = WorkManager.getInstance(appContext)
 
         val updateTasksWorkRequest: OneTimeWorkRequest =
@@ -30,6 +32,18 @@ class TaskWorkersManager(private val appContext: Context) {
                 .build()
 
         workManager.enqueue(updateTasksWorkRequest)
+    }
+
+    fun callRestartSettingsWorker(){
+        val workManager = WorkManager.getInstance(appContext)
+
+        val restartSettingsWorkRequest = OneTimeWorkRequest.from(RestartSettingsWorker::class.java)
+
+        workManager.enqueueUniqueWork(
+            "mdschedule_restart_settings_work",
+            ExistingWorkPolicy.KEEP,
+            restartSettingsWorkRequest
+        )
     }
 
 }

@@ -135,7 +135,7 @@ class TaskDisplayManager(private val settings: SettingsData) {
         return displayTasks
     }
 
-    private fun getParsedTaskText(task: String): String{
+    fun getParsedTaskText(task: String): String{
         var text: String = parseTextRegEx.find(task)?.groups?.get("text")?.value ?: ""
         text = text.replace(parseTaskPluginRegEx, "")
         text = text.replace(prioritySymbolsRegEx, "")

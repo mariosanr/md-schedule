@@ -14,7 +14,6 @@ import com.stillloading.mdschedule.systemutils.ContentProviderParser
 const val TAG = "ScheduleWorkerUnits"
 
 
-// postponed until the tasks are updated from a content observer
 class UpdateTasksWorker(
     private val appContext: Context,
     workerParameters: WorkerParameters,
@@ -46,15 +45,26 @@ class UpdateTasksWorker(
          */
 
         val date = inputData.getString("date") ?: return Result.failure()
-        Log.d(TAG, "Got date in worker: $date")
-
 
         // update the tasks database
         val contentProviderParser = ContentProviderParser(context = appContext)
         contentProviderParser.updateTasks(date, false) ?: return Result.failure()
 
-        Log.d(TAG, "Successfully updated the tasks in Worker")
+        return Result.success()
+    }
+}
+
+
+class RestartSettingsWorker(
+    private val appContext: Context,
+    workerParameters: WorkerParameters,
+): CoroutineWorker(appContext, workerParameters){
+
+    override suspend fun doWork(): Result {
+        val contentProviderParser = ContentProviderParser(context = appContext)
+        contentProviderParser.restartSettings()
 
         return Result.success()
     }
+
 }

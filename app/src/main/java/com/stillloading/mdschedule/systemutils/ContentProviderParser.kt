@@ -111,6 +111,13 @@ class ContentProviderParser(
 
     }
 
+    fun restartSettings(){
+        context.contentResolver.update(
+            ScheduleProviderContract.SETTINGS.CONTENT_URI, null, null, null
+        )
+
+    }
+
 
     suspend fun getWidgetTasks(): MutableList<TaskWidgetDisplayData>{
         return withContext(Dispatchers.IO){
