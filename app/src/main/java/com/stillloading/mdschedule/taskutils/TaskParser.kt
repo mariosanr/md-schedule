@@ -9,11 +9,8 @@ import com.stillloading.mdschedule.data.SettingsData
 import com.stillloading.mdschedule.data.Task
 import com.stillloading.mdschedule.data.TaskDates
 import com.stillloading.mdschedule.data.TaskPriority
-import com.stillloading.mdschedule.data.UnParsedTask
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import org.json.JSONArray
-import org.json.JSONObject
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.time.LocalDate
@@ -21,7 +18,7 @@ import java.time.format.DateTimeParseException
 
 class TaskParser(private val context: Context, private val settings: SettingsData) {
 
-    private val TAG = "Md Companion Debug"
+    private val TAG = "TaskParser"
 
 
     private val tasksRegEx = Regex("^\\s*- \\[.].+${settings.tasksTag}")
@@ -44,11 +41,7 @@ class TaskParser(private val context: Context, private val settings: SettingsDat
     suspend fun getTasks(date: LocalDate, startingUri: Uri): MutableList<Task>{
         return withContext(Dispatchers.IO){
             val (files, todaysFile) = getAllFiles(startingUri, date)
-            val (rawTasks, rawDayPlannerTasks) = searchFiles(files, todaysFile)
-            if(rawTasks.size > 0 || rawDayPlannerTasks.size > 0){
-                return@withContext parseTasks(rawTasks, rawDayPlannerTasks, date)
-            }
-            return@withContext mutableListOf()
+            return@withContext searchFiles(files, todaysFile, date)
         }
     }
 
@@ -98,13 +91,13 @@ class TaskParser(private val context: Context, private val settings: SettingsDat
     }
 
 
-    // Return Mutable Lists of Triple(Title, line/task, uri) and Pair(line/task, uri)
-    private fun searchFiles(files: MutableList<FileData>, todaysFile: Uri?):
-            Pair<MutableList<UnParsedTask>, MutableList<UnParsedTask>>{
+    private fun searchFiles(files: MutableList<FileData>, todaysFile: Uri?, date: LocalDate):
+            MutableList<Task>{
 
         val contentResolver = context.contentResolver
-        val tasks: MutableList<UnParsedTask> = mutableListOf()
-        val dayPlannerTasks: MutableList<UnParsedTask> = mutableListOf()
+
+        val tasks = mutableListOf<Task>()
+        val dateString = date.toString()
 
         var line: String?
 
@@ -113,7 +106,12 @@ class TaskParser(private val context: Context, private val settings: SettingsDat
                 BufferedReader(InputStreamReader(inputStream)).use { reader ->
                     line = reader.readLine()
                     while (line != null) {
-                        if (isLineTask(line!!)) tasks.add(UnParsedTask(files[i].title, line!!, files[i].uri))
+                        if (isLineTask(line!!)) {
+                            val task = getParsedTask(files[i].title, line!!, files[i].uri, date, dateString)
+                            if(task != null){
+                                tasks.add(task)
+                            }
+                        }
 
                         line = reader.readLine()
                     }
@@ -126,7 +124,12 @@ class TaskParser(private val context: Context, private val settings: SettingsDat
                 BufferedReader(InputStreamReader(inputStream)).use { reader ->
                     line = reader.readLine()
                     while (line != null){
-                        if (isLineDayPlanner(line!!)) dayPlannerTasks.add(UnParsedTask(null, line!!, todaysFile))
+                        if (isLineDayPlanner(line!!)){
+                            val dayPlannerTask = getParsedDayPlannerTask(line!!, todaysFile, dateString)
+                            if(dayPlannerTask != null){
+                                tasks.add(dayPlannerTask)
+                            }
+                        }
 
                         line = reader.readLine()
                     }
@@ -135,7 +138,7 @@ class TaskParser(private val context: Context, private val settings: SettingsDat
         }
 
 
-        return Pair(tasks, dayPlannerTasks)
+        return tasks
     }
 
     private fun isLineTask(line: String): Boolean{
@@ -146,167 +149,133 @@ class TaskParser(private val context: Context, private val settings: SettingsDat
         return dayPlannerRegEx.containsMatchIn(line)
     }
 
-    private fun parseTasks(tasks: MutableList<UnParsedTask>, dayPlannerTasks: MutableList<UnParsedTask>,
-                           date: LocalDate): MutableList<Task>{
-        val dateString = date.toString()
-
-        var title: String?
-        var text: String
-        var uri: Uri
-
-        var matches: Sequence<MatchResult>
-        var statusAndPlannerMatch: MatchResult?
-        val parsedTasks: MutableList<Task> = mutableListOf()
 
 
-        var evDate: String?
-        var evStartTime: String?
-        var evEndTime: String?
+    private fun getParsedTask(title: String?, task: String, uri: Uri, date: LocalDate, dateString: String): Task?{
+        var evDate: String? = null
+        var evStartTime: String? = null
+        var evEndTime: String? = null
 
-        var priority: TaskPriority
-        var status: String?
-        var dueDate: String?
-        var scheduledDate: String?
-        var startDate: String?
-
-        // Day Planner tasks
-        for(task in dayPlannerTasks){
-            text = task.task
-            uri = task.uri
-
-            statusAndPlannerMatch = taskStatusAndPlannerRegEx.find(text)
-            status = statusAndPlannerMatch?.groups?.get("status")?.value
-            evStartTime = statusAndPlannerMatch?.groups?.get("startTime")?.value
-            evEndTime = statusAndPlannerMatch?.groups?.get("endTime")?.value
-
-            // modify or remove any invalid times
-            val taskDates = TaskDates(
-                evStartTime = evStartTime,
-                evEndTime = evEndTime
-            )
-            checkValidEventTimes(taskDates)
-
-            if(taskDates.evStartTime == null){
-                continue
-            }
-
-            parsedTasks.add(
-                Task(
-                task = text,
-                status = status,
-                scheduledDate = dateString,
-                evDate = dateString,
-                evStartTime = taskDates.evStartTime,
-                evEndTime = taskDates.evEndTime,
-                isDayPlanner = true,
-                uri = uri
-            )
-            )
-        }
+        var priority = TaskPriority.NORMAL
+        var dueDate: String? = null
+        var scheduledDate: String? = null
+        var startDate: String? = null
 
 
-        // tasks from tasks plugin
-        for(task in tasks){
-            title = task.fileTitle
-            text = task.task
-            uri = task.uri
-
-            evDate = null
-            evStartTime = null
-            evEndTime = null
-
-            priority = TaskPriority.NORMAL
-            dueDate = null
-            scheduledDate = null
-            startDate = null
-
-
-            matches = taskParseRegEx.findAll(text)
-            matches.forEach { match ->
-                when(match.groups["symbol"]?.value){
-                    "📅" -> {
-                        dueDate = match.groups["date"]?.value
-                    }
-                    "⏳" -> {
-                        scheduledDate = match.groups["date"]?.value
-                    }
-                    "🛫" -> {
-                        startDate = match.groups["date"]?.value
-                    }
-                    "🔺" -> {
-                        priority = TaskPriority.HIGHEST
-                    }
-                    "⏫" -> {
-                        priority = TaskPriority.HIGH
-                    }
-                    "🔼" -> {
-                        priority = TaskPriority.MEDIUM
-                    }
-                    "🔽" -> {
-                        priority = TaskPriority.LOW
-                    }
-                    "⏬" -> {
-                        priority = TaskPriority.LOWEST
-                    }
-                    "@" -> {
-                        evDate = match.groups["date"]?.value
-                        evStartTime = match.groups["startTime"]?.value
-                        evEndTime = match.groups["endTime"]?.value
-                    }
-                    else -> Log.i(TAG, "Symbol: ${match.groups["symbol"]?.value.toString()} not implemented")
+        val matches = taskParseRegEx.findAll(task)
+        matches.forEach { match ->
+            when(match.groups["symbol"]?.value){
+                "📅" -> {
+                    dueDate = match.groups["date"]?.value
                 }
+                "⏳" -> {
+                    scheduledDate = match.groups["date"]?.value
+                }
+                "🛫" -> {
+                    startDate = match.groups["date"]?.value
+                }
+                "🔺" -> {
+                    priority = TaskPriority.HIGHEST
+                }
+                "⏫" -> {
+                    priority = TaskPriority.HIGH
+                }
+                "🔼" -> {
+                    priority = TaskPriority.MEDIUM
+                }
+                "🔽" -> {
+                    priority = TaskPriority.LOW
+                }
+                "⏬" -> {
+                    priority = TaskPriority.LOWEST
+                }
+                "@" -> {
+                    evDate = match.groups["date"]?.value
+                    evStartTime = match.groups["startTime"]?.value
+                    evEndTime = match.groups["endTime"]?.value
+                }
+                else -> Log.d(TAG, "Symbol: ${match.groups["symbol"]?.value.toString()} not implemented")
             }
-
-
-            // if no scheduled date, make the scheduled date the note title if applicable
-            if (scheduledDate == null){
-                scheduledDate = title
-            }
-
-            // If not in date
-            if((dateString != startDate) and (dateString != scheduledDate) and (dateString != dueDate)
-                        and (dateString != evDate) and (!taskIsInProgress(date, startDate, dueDate))){
-                continue
-            }
-
-            // from this point there are only going to be tasks that we are showing to the user
-            // set the event date if there wasnt one specified
-            if(evStartTime != null && evDate == null) evDate = getEventDate(startDate, scheduledDate, dueDate)
-
-            // check if each date is valid before setting it
-            val taskDates = TaskDates(
-                startDate = startDate,
-                scheduledDate = scheduledDate,
-                dueDate = dueDate,
-                evDate = evDate,
-                evStartTime = evStartTime,
-                evEndTime = evEndTime
-            )
-            // will remove or modify any date and time that is not valid
-            checkValidDateTimes(taskDates)
-
-            statusAndPlannerMatch = taskStatusRegEx.find(text)
-            status = statusAndPlannerMatch?.groups?.get("status")?.value
-
-            parsedTasks.add(
-                Task(
-                task = text,
-                priority = priority,
-                status = status,
-                dueDate = taskDates.dueDate,
-                scheduledDate = taskDates.scheduledDate,
-                startDate = taskDates.startDate,
-                evDate = taskDates.evDate,
-                evStartTime = taskDates.evStartTime,
-                evEndTime = taskDates.evEndTime,
-                isDayPlanner = false,
-                uri = uri,
-            )
-            )
         }
 
-        return parsedTasks
+
+        // if no scheduled date, make the scheduled date the note title if applicable
+        if (scheduledDate == null){
+            scheduledDate = title
+        }
+
+        // If not in date
+        if((dateString != startDate) and (dateString != scheduledDate) and (dateString != dueDate)
+            and (dateString != evDate) and (!taskIsInProgress(date, startDate, dueDate))){
+            return null
+        }
+
+        // from this point there are only going to be tasks that we are showing to the user
+        // set the event date if there wasnt one specified
+        if(evStartTime != null && evDate == null) evDate = getEventDate(startDate, scheduledDate, dueDate)
+
+        // check if each date is valid before setting it
+        val taskDates = TaskDates(
+            startDate = startDate,
+            scheduledDate = scheduledDate,
+            dueDate = dueDate,
+            evDate = evDate,
+            evStartTime = evStartTime,
+            evEndTime = evEndTime
+        )
+        // will remove or modify any date and time that is not valid
+        checkValidDateTimes(taskDates)
+
+        val statusAndPlannerMatch = taskStatusRegEx.find(task)
+        val status = statusAndPlannerMatch?.groups?.get("status")?.value
+
+
+        return Task(
+            task = task,
+            priority = priority,
+            status = status,
+            dueDate = taskDates.dueDate,
+            scheduledDate = taskDates.scheduledDate,
+            startDate = taskDates.startDate,
+            evDate = taskDates.evDate,
+            evStartTime = taskDates.evStartTime,
+            evEndTime = taskDates.evEndTime,
+            isDayPlanner = false,
+            uri = uri,
+            )
+
     }
+
+    private fun getParsedDayPlannerTask(task: String, uri: Uri, dateString: String): Task?{
+        val statusAndPlannerMatch = taskStatusAndPlannerRegEx.find(task)
+        val status = statusAndPlannerMatch?.groups?.get("status")?.value
+        val evStartTime = statusAndPlannerMatch?.groups?.get("startTime")?.value
+        val evEndTime = statusAndPlannerMatch?.groups?.get("endTime")?.value
+
+        // modify or remove any invalid times
+        val taskDates = TaskDates(
+            evStartTime = evStartTime,
+            evEndTime = evEndTime
+        )
+        checkValidEventTimes(taskDates)
+
+        if(taskDates.evStartTime == null){
+            return null
+        }
+
+
+        return Task(
+            task = task,
+            status = status,
+            scheduledDate = dateString,
+            evDate = dateString,
+            evStartTime = taskDates.evStartTime,
+            evEndTime = taskDates.evEndTime,
+            isDayPlanner = true,
+            uri = uri
+        )
+    }
+
 
 
     private fun taskIsInProgress(date: LocalDate, startDate: String?, dueDate: String?): Boolean{
