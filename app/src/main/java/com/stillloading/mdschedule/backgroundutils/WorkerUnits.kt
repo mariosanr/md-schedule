@@ -39,13 +39,17 @@ class UpdateTasksWorker(
         }
          */
 
-        val date = inputData.getString("date") ?: return Result.failure()
+        try{
+            val date = inputData.getString("date") ?: return Result.failure()
 
-        // update the tasks database
-        val contentProviderParser = ContentProviderParser(context = appContext)
-        contentProviderParser.updateTasks(date, false) ?: return Result.failure()
+            // update the tasks database and widget
+            val contentProviderParser = ContentProviderParser(context = appContext)
+            contentProviderParser.updateTasks(date, false) ?: return Result.failure()
 
-        return Result.success()
+            return Result.success()
+        }catch (_: Exception){
+            return Result.retry()
+        }
     }
 }
 
