@@ -10,7 +10,7 @@ import java.time.format.DateTimeFormatter
 
 class TaskDisplayManager(private val settings: SettingsData) {
 
-    private val parseTextRegEx = Regex("^\\s*(?:- \\[.]|-)\\s+(?:\\d{2}:\\d{2}\\s*-\\s*\\d{2}:\\d{2})?(?<text>.*)")
+    private val parseTextRegEx = Regex("^\\s*(?:- \\[.]|-)\\s+(?:\\d\\d?:\\d{2}\\s*-\\s*\\d\\d?:\\d{2})?(?<text>.*)")
     private val parseTaskPluginRegEx = Regex("[📅⏳🛫✅❌]\\s*\\d{4}-\\d{2}-\\d{2}")
     private val prioritySymbolsRegEx = Regex("[🔺⏫🔼🔽⏬]")
     // It will match anything that has a @, so I need to check in code after if at least one of the groups matched
