@@ -281,7 +281,9 @@ class MainActivity : AppCompatActivity() {
                 true
             }
             R.id.reload_option -> {
-                reloadTasks(true)
+                if(!updatingTasks){
+                    reloadTasks(true)
+                }
                 true
             }
             else -> super.onOptionsItemSelected(item)

@@ -18,11 +18,11 @@
 
 package com.stillloading.mdschedule.taskutils
 
+import android.content.ContentResolver
 import android.content.Context
 import android.net.Uri
 import android.util.Log
 import androidx.documentfile.provider.DocumentFile
-import com.stillloading.mdschedule.data.FileData
 import com.stillloading.mdschedule.data.SettingsData
 import com.stillloading.mdschedule.data.Task
 import com.stillloading.mdschedule.data.TaskDates
@@ -58,30 +58,19 @@ class TaskParser(private val context: Context, private val settings: SettingsDat
 
     suspend fun getTasks(date: LocalDate, startingUri: Uri): MutableList<Task>{
         return withContext(Dispatchers.IO){
-            val (files, todaysFile) = getAllFiles(startingUri, date)
-            return@withContext searchFiles(files, todaysFile, date)
+            getAllFilesAndSearch(date, startingUri)
         }
     }
 
 
-    private fun skipDirectory(directory: DocumentFile): Boolean{
-        for(dir in settings.skipDirectories){
-            if(dir == directory.name) return true
-        }
-
-        return false
-    }
-
-
-    // Returns Pair(list of files(title, uri), uri of todays file)
-    private fun getAllFiles(startingUri: Uri, date: LocalDate): Pair<MutableList<FileData>, Uri?> {
-        val dFile = DocumentFile.fromTreeUri(context, startingUri) ?: return Pair(mutableListOf(), null)
+    private fun getAllFilesAndSearch(date: LocalDate, startingUri: Uri): MutableList<Task> {
+        val dFile = DocumentFile.fromTreeUri(context, startingUri) ?: return mutableListOf()
+        val contentResolver = context.contentResolver
 
         val stack: MutableList<DocumentFile> = mutableListOf(dFile)
-        val mdFiles: MutableList<FileData> = mutableListOf()
 
-        var todaysFile: Uri? = null
-        var fileTitle: String?
+        val dateString = date.toString()
+        val tasks = mutableListOf<Task>()
 
         do {
             val directory = stack.removeLast()
@@ -94,10 +83,12 @@ class TaskParser(private val context: Context, private val settings: SettingsDat
                 if (file.isDirectory) {
                     stack.add(file)
                 } else if (file.type == "text/markdown") {
-                    fileTitle = file.name?.dropLast(3)
-                    mdFiles.add(FileData(fileTitle, file.uri))
+                    val fileTitle = file.name?.dropLast(3)
+                    searchFile(tasks, fileTitle, file.uri, date, dateString, contentResolver)
                     try{
-                        if(LocalDate.parse(fileTitle) == date) todaysFile = file.uri
+                        if(fileTitle == dateString) {
+                            searchDayPlannerFile(tasks, file.uri, dateString, contentResolver)
+                        }
                     }catch (_: DateTimeParseException) {}
                 }
             }
@@ -105,58 +96,67 @@ class TaskParser(private val context: Context, private val settings: SettingsDat
 
         } while (stack.size > 0)
 
-        return Pair(mdFiles, todaysFile)
+        return tasks
     }
 
+    private fun skipDirectory(directory: DocumentFile): Boolean{
+        for(dir in settings.skipDirectories){
+            if(dir == directory.name) return true
+        }
 
-    private fun searchFiles(files: MutableList<FileData>, todaysFile: Uri?, date: LocalDate):
-            MutableList<Task>{
+        return false
+    }
 
-        val contentResolver = context.contentResolver
+    private fun searchFile(
+        tasks: MutableList<Task>,
+        title: String?,
+        uri: Uri,
+        date: LocalDate,
+        dateString: String,
+        contentResolver: ContentResolver
+    ){
 
-        val tasks = mutableListOf<Task>()
-        val dateString = date.toString()
-
-        var line: String?
-
-        for(i in 0..<files.size) {
-            contentResolver.openInputStream(files[i].uri)?.use { inputStream ->
-                BufferedReader(InputStreamReader(inputStream)).use { reader ->
-                    line = reader.readLine()
-                    while (line != null) {
-                        if (isLineTask(line!!)) {
-                            val task = getParsedTask(files[i].title, line!!, files[i].uri, date, dateString)
-                            if(task != null){
-                                tasks.add(task)
-                            }
+        contentResolver.openInputStream(uri)?.use { inputStream ->
+            BufferedReader(InputStreamReader(inputStream)).use { reader ->
+                var line: String? = reader.readLine()
+                while (line != null) {
+                    if (isLineTask(line)) {
+                        val task = getParsedTask(title, line, uri, date, dateString)
+                        if(task != null){
+                            tasks.add(task)
                         }
-
-                        line = reader.readLine()
                     }
+
+                    line = reader.readLine()
                 }
             }
         }
 
-        if (todaysFile != null) {
-            contentResolver.openInputStream(todaysFile)?.use { inputStream ->
-                BufferedReader(InputStreamReader(inputStream)).use { reader ->
-                    line = reader.readLine()
-                    while (line != null){
-                        if (isLineDayPlanner(line!!)){
-                            val dayPlannerTask = getParsedDayPlannerTask(line!!, todaysFile, dateString)
-                            if(dayPlannerTask != null){
-                                tasks.add(dayPlannerTask)
-                            }
-                        }
+    }
 
-                        line = reader.readLine()
+    private fun searchDayPlannerFile(
+        tasks: MutableList<Task>,
+        uri: Uri,
+        dateString: String,
+        contentResolver: ContentResolver
+    ){
+
+        contentResolver.openInputStream(uri)?.use { inputStream ->
+            BufferedReader(InputStreamReader(inputStream)).use { reader ->
+                var line: String? = reader.readLine()
+                while (line != null){
+                    if (isLineDayPlanner(line)){
+                        val dayPlannerTask = getParsedDayPlannerTask(line, uri, dateString)
+                        if(dayPlannerTask != null){
+                            tasks.add(dayPlannerTask)
+                        }
                     }
+
+                    line = reader.readLine()
                 }
             }
         }
 
-
-        return tasks
     }
 
     private fun isLineTask(line: String): Boolean{
