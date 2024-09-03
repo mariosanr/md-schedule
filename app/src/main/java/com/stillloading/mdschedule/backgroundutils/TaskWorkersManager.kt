@@ -32,6 +32,7 @@ import java.util.concurrent.TimeUnit
 class TaskWorkersManager(private val appContext: Context) {
 
 
+    // not in use until periodic updates are fixed
     fun callUpdateTasksWorker(date: String){
         val workManager = WorkManager.getInstance(appContext)
 
@@ -42,7 +43,6 @@ class TaskWorkersManager(private val appContext: Context) {
                     "date" to date
                     )
                 )
-                //.setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
                 .setBackoffCriteria(
                     BackoffPolicy.EXPONENTIAL,
                     WorkRequest.MAX_BACKOFF_MILLIS,
@@ -53,6 +53,7 @@ class TaskWorkersManager(private val appContext: Context) {
         workManager.enqueue(updateTasksWorkRequest)
     }
 
+    // not in use until periodic updates are fixed
     fun callRebootWorkers(){
         val workManager = WorkManager.getInstance(appContext)
 

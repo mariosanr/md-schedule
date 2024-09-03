@@ -22,7 +22,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import com.stillloading.mdschedule.notificationsutils.NotificationsCreator
-import java.time.LocalDate
 
 class AlarmReceiver : BroadcastReceiver() {
 
@@ -30,6 +29,7 @@ class AlarmReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         when(intent.action){
+            /*
             TaskAlarmManager.UPDATE_TASKS_ACTION -> {
                 // call the worker to update
                 val date = LocalDate.now().toString()
@@ -43,6 +43,7 @@ class AlarmReceiver : BroadcastReceiver() {
                 val alarmIntent = taskAlarmManager.getUpdateAlarmIntent(requestCode, timeString)
                 taskAlarmManager.setUpdateAlarmIntent(requestCode, timeString, alarmIntent)
             }
+             */
             TaskAlarmManager.NOTIFICATIONS_ACTION -> {
                 val timeString = intent.getStringExtra(TaskAlarmManager.NOTIFICATIONS_EXTRA_TIME) ?: return
                 val task = intent.getStringExtra(TaskAlarmManager.NOTIFICATIONS_EXTRA_TASK) ?: return

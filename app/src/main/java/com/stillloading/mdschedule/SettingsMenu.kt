@@ -19,9 +19,7 @@
 package com.stillloading.mdschedule
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.app.Activity
-import android.app.TimePickerDialog
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -49,13 +47,10 @@ import com.stillloading.mdschedule.backgroundutils.PermissionManager
 import com.stillloading.mdschedule.data.DirectoryData
 import com.stillloading.mdschedule.data.SettingsDisplayData
 import com.stillloading.mdschedule.data.SkipDirectoryData
-import com.stillloading.mdschedule.data.UpdateTimesData
 import com.stillloading.mdschedule.notificationsutils.NotificationsCreator
 import com.stillloading.mdschedule.settingsutils.DirectoryAdapter
 import com.stillloading.mdschedule.settingsutils.SkipDirectoriesAdapter
-import com.stillloading.mdschedule.settingsutils.UpdateTimesAdapter
 import com.stillloading.mdschedule.systemutils.ContentProviderParser
-import java.util.Calendar
 
 
 class SettingsMenu : AppCompatActivity() {
@@ -67,7 +62,7 @@ class SettingsMenu : AppCompatActivity() {
     private lateinit var directoryAdapter: DirectoryAdapter
     private lateinit var startForResult: ActivityResultLauncher<Intent>
 
-    private lateinit var updateTimesAdapter: UpdateTimesAdapter
+    //private lateinit var updateTimesAdapter: UpdateTimesAdapter
     private lateinit var skipDirectoriesAdapter: SkipDirectoriesAdapter
 
     private lateinit var etTasksTag: EditText
@@ -112,7 +107,7 @@ class SettingsMenu : AppCompatActivity() {
         initTasksTag()
         initDayPlannerNotifications()
         initNotifications()
-        initUpdateTimes()
+        //initUpdateTimes()
         initInProgressTasks()
         initDayPlannerWidget()
         initSkipDirectories()
@@ -126,7 +121,8 @@ class SettingsMenu : AppCompatActivity() {
         settings.tasksTag = etTasksTag.text.toString().trim()
         settings.notificationsEnabled = switchNotifications.isChecked
         settings.dayPlannerNotificationsEnabled = switchDayPlannerNotifications.isChecked
-        settings.updateTimes = updateTimesAdapter.updateTimesList
+        //settings.updateTimes = updateTimesAdapter.updateTimesList
+        settings.updateTimes = mutableListOf()
         settings.inProgressTasksEnabled = switchInProgressTasks.isChecked
         settings.dayPlannerWidgetEnabled = switchDayPlannerWidget.isChecked
         settings.skipDirectories = skipDirectoriesAdapter.skipDirectoryList.map {
@@ -305,7 +301,7 @@ class SettingsMenu : AppCompatActivity() {
 
 
 
-
+    /*
     private fun initUpdateTimes(){
         updateTimesAdapter = UpdateTimesAdapter(settings.updateTimes)
 
@@ -333,6 +329,7 @@ class SettingsMenu : AppCompatActivity() {
 
         timePickerDialog.show()
     }
+     */
 
 
 

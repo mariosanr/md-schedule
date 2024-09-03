@@ -132,6 +132,7 @@
                 android:gravity="top"
                 android:layout_alignParentTop="true"
                 android:layout_alignParentEnd="true"
+                android:contentDescription="@string/switchDescription"
                 />
 
         </RelativeLayout>
@@ -176,12 +177,13 @@
                 android:gravity="top"
                 android:layout_alignParentTop="true"
                 android:layout_alignParentEnd="true"
+                android:contentDescription="@string/switchDescription"
                 />
 
         </RelativeLayout>
 
 
-        <!-- Update times  -->
+        <!-- Update times
 
         <TextView
             android:id="@+id/tvUpdateTimesTitle"
@@ -219,7 +221,7 @@
             android:layout_marginTop="16dp"
             android:layout_gravity="center"
             />
-
+        -->
 
         <!-- Get In Progress Tasks -->
 
@@ -259,6 +261,7 @@
                 android:gravity="top"
                 android:layout_alignParentTop="true"
                 android:layout_alignParentEnd="true"
+                android:contentDescription="@string/switchDescription"
                 />
 
         </RelativeLayout>
@@ -301,6 +304,7 @@
                 android:gravity="top"
                 android:layout_alignParentTop="true"
                 android:layout_alignParentEnd="true"
+                android:contentDescription="@string/switchDescription"
                 />
 
         </RelativeLayout>

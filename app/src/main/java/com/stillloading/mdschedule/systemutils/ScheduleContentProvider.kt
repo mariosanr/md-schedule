@@ -121,13 +121,6 @@ class ScheduleContentProvider : ContentProvider() {
         taskAlarmManager = TaskAlarmManager(context!!.applicationContext)
 
         taskDatabase = TaskDatabase.getDatabase(context!!)
-        /*
-        taskDatabase = Room.databaseBuilder(
-            context!!,
-            TaskDatabase::class.java,
-            DBNAME
-        ).build()
-         */
         taskDao = taskDatabase.taskDao()
 
         settingsFlowData = fileSystemManager.getSettingsFlow()
@@ -208,18 +201,22 @@ class ScheduleContentProvider : ContentProvider() {
             1 -> { // settings
                 runBlocking(Dispatchers.IO){
                     if(values != null){
+                        /*
                         fileSystemManager.cancelUpdateTimes(
                             fileSystemManager.getSettingsData(settingsFlowData),
                             taskAlarmManager
                         )
+                         */
 
                         values.toSettingsData().let { fileSystemManager.saveSettings(it) }
                     }
 
+                    /*
                     fileSystemManager.setUpdateTimes(
                         fileSystemManager.getSettingsData(settingsFlowData),
                         taskAlarmManager
                     )
+                     */
                 }
 
                 context?.contentResolver?.notifyChange(uri, null)
@@ -236,13 +233,15 @@ class ScheduleContentProvider : ContentProvider() {
                         if(date != null){
                             val settings = fileSystemManager.getSettingsData(settingsFlowData)
 
-                            val taskCount = taskDao.getCount()
-                            fileSystemManager.cancelTaskNotifications(taskCount, taskAlarmManager)
 
                             val tasksArray = fileSystemManager.getTasksArray(settings, date)
 
-                            // wait for the operation to complete to clear the database
+                            // wait for operation to complete to cancel notifications and delete database
+                            val taskCount = taskDao.getCount()
+                            fileSystemManager.cancelTaskNotifications(taskCount, taskAlarmManager)
+
                             taskDao.deleteAll()
+
 
                             taskDao.insertAll(*tasksArray)
                             fileSystemManager.saveLastUpdated(LocalDateTime.now())

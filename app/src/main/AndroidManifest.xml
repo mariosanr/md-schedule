@@ -11,7 +11,6 @@
     <uses-permission android:name="com.stillloading.mdschedule.provider.WRITE_PROVIDER" />
     <uses-permission android:name="com.stillloading.mdschedule.provider.READ_PROVIDER" />
 
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
 
@@ -25,15 +24,6 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AppCompat.DayNight.DarkActionBar"
          >
-
-        <receiver
-            android:name=".backgroundutils.BootReceiver"
-            android:enabled="true"
-            android:exported="true" >
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED"/>
-            </intent-filter>
-        </receiver>
 
         <receiver
             android:name=".backgroundutils.AlarmReceiver"

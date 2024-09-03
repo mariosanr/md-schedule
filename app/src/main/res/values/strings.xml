@@ -61,6 +61,7 @@
     <string name="skipDirectoriesHint">name</string>
 
     <string name="removeButtonDescription">Remove item</string>
+    <string name="switchDescription">Enable/Disable Setting</string>
 
 
     <string name="app_widget_description">Display your tasks for today</string>
