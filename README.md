@@ -27,10 +27,10 @@ Now available for Android: https://play.google.com/store/apps/details?id=com.sti
 
   \- [ ] #todo This is a task with medium importance that is still not done and I will be notified on August 30th at 4:00 pm @16:00 🔼 🛫 2024-08-30 📅 2024-09-05
 - Additional support for 'static tasks', which need to be in a file with today's date as the title. Compatible with the [Obsidian Day Planner plugin](https://github.com/ivan-lednev/obsidian-day-planner):
+  - These may be inside a checkbox or a simple bullet point.
 
   \-  08:00 - 09:00 Wake up
 
-  These maybe inside a checkbox or a simple bullet point.
 - All dates must follow the YYYY-MM-DD format.
 
 ## Contributing 
