@@ -14,5 +14,9 @@
         app:showAsAction="ifRoom"
         />
 
+    <item android:id="@+id/use_option"
+        android:title="@string/action_use"
+        app:showAsAction="never"/>
+
 
 </menu>

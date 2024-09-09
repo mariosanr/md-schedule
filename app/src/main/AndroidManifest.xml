@@ -10,7 +10,6 @@
 
     <uses-permission android:name="com.stillloading.mdschedule.provider.WRITE_PROVIDER" />
     <uses-permission android:name="com.stillloading.mdschedule.provider.READ_PROVIDER" />
-
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
 
@@ -22,18 +21,15 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.AppCompat.DayNight.DarkActionBar"
-         >
+        android:theme="@style/Theme.AppCompat.DayNight.DarkActionBar">
 
         <receiver
             android:name=".backgroundutils.AlarmReceiver"
-            android:enabled="true"
-            >
-        </receiver>
+            android:enabled="true"/>
 
         <receiver
             android:name=".TasksWidget"
-            android:exported="false" >
+            android:exported="false">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
@@ -56,15 +52,18 @@
             android:writePermission="com.stillloading.mdschedule.provider.WRITE_PROVIDER" />
 
         <activity
+            android:name=".UseActivity"
+            android:exported="false" />
+
+        <activity
             android:name=".SettingsMenu"
             android:exported="false"
             android:label="@string/action_settings"
-            android:parentActivityName=".MainActivity"
-            />
+            android:parentActivityName=".MainActivity" />
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:launchMode="singleInstance" >
+            android:launchMode="singleInstance">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

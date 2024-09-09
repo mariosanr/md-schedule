@@ -15,7 +15,8 @@
     <string name="widgetTasksNone">No tasks were found today.</string>
 
     <string name="action_settings">Settings</string>
-    <string name="action_reload">Reload</string>
+    <string name="action_reload">Refresh</string>
+    <string name="action_use">How to Use</string>
 
     <string name="settingsHeader">After changing any setting, please refresh the tasks to ensure that changes have been applied.</string>
 
@@ -62,6 +63,40 @@
 
     <string name="removeButtonDescription">Remove item</string>
     <string name="switchDescription">Enable/Disable Setting</string>
+
+
+
+    <string name="useTitle"><u>How to use</u></string>
+    <string name="useExplanation1">
+        1. Using an external software for creating and editing Markdown files (.md),
+        you can set tasks and events by using the following syntax:\n\n
+        - All tasks and events must be in a line that starts with a Markdown checkbox \'\- [ ]\' \n
+        - Start date: 🛫 2024\-12\-31\n
+        - Scheduled date: ⏳ 2024\-12\-31 (If not set it will be taken as the file name if applicable)\n
+        - Due date: 📅 2024\-12\-31\n
+        - Priority (from highest to lowest): 🔺, ⏫, 🔼, (No priority = normal), 🔽, ⏬\n
+        - Status(character inside checkbox): To do [ ], Done [x], Cancelled [\-], In Progress [\/]\n
+        - Optional tag to differentiate tasks that you want the program to recognize e.g. \#task or \#todo\n
+        - Set an event:\n
+        \@ 9:00\n
+        \@ 09:30 \- 12:00\n
+        \@ 2024\-12\-31 8:45 \- 09:00\n
+        For those without a date, it will use one of start date, due date, or scheduled date (the priority is in that order).\n
+        If enabled, a notification will be delivered on the start time of the event. Any of these is valid:\n
+        - Set a static event (not compatible with the syntax specified above),
+        which needs to be located inside a file with today\'s date as the title e.g. 2024\-12\-31.md:\n
+        These may be inside a checkbox (\- [ ]) or a normal bullet point (\-).\n
+        08:00 \- 09:00 Wake up\n\n
+        Example Markdown file with the title \'2024\-09\-02\':
+    </string>
+    <string name="useExplanation2">
+        2. Save the Markdown file inside a folder in the phone\'s external storage e.g. Documents\n\n
+        3. Specify the folder in Settings \> Folder Paths. You can also change any of the settings according to your preferences.\n\n
+        4. Return to the main page and press the refresh button at the top of the screen.\n\n
+        5. Wait for the loading wheel to stop. If you leave the application early, it may not update correctly.\n\n
+        Output from the example Markdown file if run on September 2, 2024 (2024\-09\-02):
+    </string>
+
 
 
     <string name="app_widget_description">Display your tasks for today</string>

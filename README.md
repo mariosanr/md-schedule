@@ -11,6 +11,7 @@ Now available for Android: https://play.google.com/store/apps/details?id=com.sti
 
 ## Use:
 - Compatible with the [Obsidian Tasks plugin](https://github.com/obsidian-tasks-group/obsidian-tasks) with the emoji format:
+  - All tasks must be preceded by a Markdown checkbox.
   - Start date: 🛫 2024-12-31
   - Scheduled date: ⏳ 2024-12-31 (If not set it will be taken as the file name if applicable)
   - Due date: 📅 2024-12-31
@@ -28,13 +29,15 @@ Now available for Android: https://play.google.com/store/apps/details?id=com.sti
 - Additional support for 'static tasks', which need to be in a file with today's date as the title. Compatible with the [Obsidian Day Planner plugin](https://github.com/ivan-lednev/obsidian-day-planner):
 
   \-  08:00 - 09:00 Wake up
+
+  These maybe inside a checkbox or a simple bullet point.
 - All dates must follow the YYYY-MM-DD format.
 
 ## Contributing 
 If you wish to contribute to the project you can contact me by email: msrc2004@gmail.com
 
 ## Donations
-The app is completely free (and ad-free), so if you wish to help me out I would greatly appreaciate it.
+The app is completely free (and ad-free), so if you wish to help me out I would greatly appreciate it.
 
 - [Buy me a coffee](https://buymeacoffee.com/mariosanr)
 

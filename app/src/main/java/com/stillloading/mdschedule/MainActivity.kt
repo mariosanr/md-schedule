@@ -286,6 +286,10 @@ class MainActivity : AppCompatActivity() {
                 }
                 true
             }
+            R.id.use_option -> {
+                startActivity(Intent(this, UseActivity::class.java))
+                true
+            }
             else -> super.onOptionsItemSelected(item)
         }
     }
