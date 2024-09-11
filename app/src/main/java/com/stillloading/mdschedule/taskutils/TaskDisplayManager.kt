@@ -34,8 +34,8 @@ class TaskDisplayManager(private val settings: SettingsData) {
     // It will match anything that has a @, so I need to check in code after if at least one of the groups matched
     private val parseTaskEventRegEx = Regex("@(\\s*\\d{4}-\\d{2}-\\d{2})?(\\s*\\d\\d?:\\d{2})?(\\s*-\\s*\\d\\d?:\\d{2})?")
 
-    private val dateFormatter = DateTimeFormatter.ofPattern("MMM d")
-    private val dateFormatterYear = DateTimeFormatter.ofPattern("MMM d, uuuu")
+    private val dateFormatter = DateTimeFormatter.ofPattern("EEE, MMM d")
+    private val dateFormatterYear = DateTimeFormatter.ofPattern("EEE, MMM d, uuuu")
 
     fun getWidgetTasks(tasksParam: MutableList<Task>, date: String): MutableList<TaskWidgetDisplayData>{
         // implement the day planner tasks in widget setting
