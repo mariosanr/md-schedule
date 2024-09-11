@@ -2,7 +2,7 @@
 
 With Markdown Schedule, you can more easily view tasks set throughout all of your Markdown files created from apps like Obsidian, and get reminded when the time is right!
 
-Now available for Android: https://play.google.com/store/apps/details?id=com.stillloading.mdschedule
+Now available for Android as an APK in the latest release. Coming to the Google Play Store soon.
 
 ## Features
 - Daily calendar-like view
