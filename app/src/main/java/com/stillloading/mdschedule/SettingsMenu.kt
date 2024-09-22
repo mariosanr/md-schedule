@@ -164,7 +164,7 @@ class SettingsMenu : AppCompatActivity() {
         }
 
         val contentResolver = applicationContext.contentResolver
-        val takeFlags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+        val takeFlags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION //or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
         // Check for the freshest data.
         contentResolver.takePersistableUriPermission(uri, takeFlags)
 
