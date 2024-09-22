@@ -13,15 +13,20 @@ android {
         applicationId = "com.stillloading.mdschedule"
         minSdk = 28
         targetSdk = 34
-        versionCode = 3
-        versionName = "1.0.2"
+        versionCode = 4
+        versionName = "1.0.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        ksp{
+            arg("room.schemaLocation", "$projectDir/schemas")
+        }
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -57,10 +62,6 @@ dependencies {
 
     // Preferences DataStore
     implementation("androidx.datastore:datastore-preferences:1.1.1")
-
-    // WorkManager
-    val work_version = "2.9.1"
-    implementation("androidx.work:work-runtime-ktx:$work_version")
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
