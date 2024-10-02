@@ -25,6 +25,7 @@ import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
+import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.ProgressBar
@@ -60,8 +61,11 @@ class MainActivity : AppCompatActivity() {
     private lateinit var fileSystemManager: FileSystemManager
     private lateinit var contentProviderParser: ContentProviderParser
 
-    private lateinit var tvDate: TextView
+    private lateinit var bToday: Button
     private lateinit var tvLastUpdated: TextView
+    private lateinit var bCurrentDate: Button
+    private lateinit var bBackDate: Button
+    private lateinit var bNextDate: Button
 
     private lateinit var linearLayoutMain: LinearLayout
     private lateinit var rvTaskList: RecyclerView
@@ -89,8 +93,12 @@ class MainActivity : AppCompatActivity() {
         }
 
 
-        tvDate = findViewById(R.id.tvDate)
+        bToday = findViewById(R.id.bToday)
         tvLastUpdated = findViewById(R.id.tvLastUpdated)
+        bCurrentDate = findViewById(R.id.bCurrentDate)
+        bBackDate = findViewById(R.id.bBackDate)
+        bNextDate = findViewById(R.id.bNextDate)
+
         linearLayoutMain = findViewById(R.id.linearLayoutMain)
         tvTimeTasksNone = findViewById(R.id.tvTimeTasksNone)
         tvNonTimeTasksNone = findViewById(R.id.tvNonTimeTasksNone)
@@ -99,6 +107,7 @@ class MainActivity : AppCompatActivity() {
 
 
         setTodayDate()
+        setCurrentDate()
 
         fileSystemManager = FileSystemManager(applicationContext)
         contentProviderParser = ContentProviderParser(applicationContext)
@@ -155,7 +164,13 @@ class MainActivity : AppCompatActivity() {
     private fun setTodayDate(date: LocalDate = LocalDate.now()){
         val pattern = DateTimeFormatter.ofPattern("'Today:' EEE, MMM d, uuuu")
         val formattedDate = date.format(pattern)
-        tvDate.text = formattedDate
+        bToday.text = formattedDate
+    }
+
+    private fun setCurrentDate(date: LocalDate = LocalDate.now()){
+        val pattern = DateTimeFormatter.ofPattern("MMM d, uuuu")
+        val formattedDate = date.format(pattern)
+        bCurrentDate.text = formattedDate
     }
 
 
