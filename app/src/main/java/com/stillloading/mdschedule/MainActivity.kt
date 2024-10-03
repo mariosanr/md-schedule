@@ -19,6 +19,7 @@
 package com.stillloading.mdschedule
 
 import android.annotation.SuppressLint
+import android.app.DatePickerDialog
 import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
@@ -48,8 +49,12 @@ import com.stillloading.mdschedule.taskutils.TaskPopup
 import com.stillloading.mdschedule.taskutils.TimeTaskManager
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
 import java.time.LocalDate
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.util.Calendar
+import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
 
@@ -78,6 +83,7 @@ class MainActivity : AppCompatActivity() {
 
     private var minHour: Int = -1
     private var maxHour: Int = -1
+    private var currentDate: LocalDate = LocalDate.now()
 
     private var updatingTasks = false
 
@@ -108,6 +114,29 @@ class MainActivity : AppCompatActivity() {
 
         setTodayDate()
         setCurrentDate()
+
+
+        bToday.setOnClickListener {
+            setDate(Calendar.getInstance())
+        }
+
+        bCurrentDate.setOnClickListener {
+            if(!updatingTasks){
+                showDatePickerDialog()
+            }
+        }
+
+        bBackDate.setOnClickListener {
+            val calendar = getCurrentDate()
+            calendar.add(Calendar.DATE, -1)
+            setDate(calendar)
+        }
+
+        bNextDate.setOnClickListener {
+            val calendar = getCurrentDate()
+            calendar.add(Calendar.DATE, 1)
+            setDate(calendar)
+        }
 
         fileSystemManager = FileSystemManager(applicationContext)
         contentProviderParser = ContentProviderParser(applicationContext)
@@ -173,6 +202,61 @@ class MainActivity : AppCompatActivity() {
         bCurrentDate.text = formattedDate
     }
 
+    private fun getCurrentDate(): Calendar{
+        val dateFormat = SimpleDateFormat("MMM d, yyyy", Locale.getDefault())
+        val dateString = bCurrentDate.text.toString()
+
+        val calendar = Calendar.getInstance()
+
+        try{
+            val date = dateFormat.parse(dateString)
+
+            if (date != null) {
+                calendar.time = date
+            }
+        }catch (e: Exception){
+            // FIXME only for debugging
+            e.printStackTrace()
+        }
+
+        return calendar
+    }
+
+    private fun showDatePickerDialog() {
+        val calendar = getCurrentDate()
+
+        val year = calendar.get(Calendar.YEAR)
+        val month = calendar.get(Calendar.MONTH)
+        val day = calendar.get(Calendar.DAY_OF_MONTH)
+
+
+        val datePickerDialog = DatePickerDialog(
+            this,
+            { _, selectedYear, selectedMonth, selectedDay ->
+                calendar.set(selectedYear, selectedMonth, selectedDay)
+                setDate(calendar)
+            },
+            year, month, day
+        )
+
+        datePickerDialog.show()
+    }
+
+    private fun setDate(calendar: Calendar){
+        if(!updatingTasks){
+            // Update the buttons text
+            val dateFormat = SimpleDateFormat("MMM d, yyyy", Locale.getDefault())
+
+            val date = dateFormat.format(calendar.time)
+            bCurrentDate.text = date
+
+            // convert calendar to LocalDate and set it for next update
+            currentDate = calendar.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
+
+            reloadTasks(update = true)
+        }
+    }
+
 
     private fun setMinMaxHours(tasksList: MutableList<TaskDisplayData>){
         val hourRegEx = Regex("^(?<hour>\\d\\d?)")
@@ -218,7 +302,7 @@ class MainActivity : AppCompatActivity() {
 
             // if not updating, use the last modified date, since that is what the tasks in the database were made with
             val date = if(update)
-                LocalDate.now() else contentProviderParser.getLastUpdated()?.toLocalDate() ?: LocalDate.now()
+                currentDate else contentProviderParser.getLastUpdated()?.toLocalDate() ?: currentDate
 
             val (timeTasks, nonTimeTasks) = contentProviderParser.getTasks(date.toString(), update) ?: run {
                 pbLoadingWheel.visibility = View.GONE
