@@ -22,13 +22,19 @@ import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
+import android.graphics.Paint
 import android.net.Uri
+import android.os.Build
+import android.os.Bundle
 import android.view.View
 import android.widget.RemoteViews
 import com.stillloading.mdschedule.MainActivity
 import com.stillloading.mdschedule.R
 import com.stillloading.mdschedule.TasksWidget
+import com.stillloading.mdschedule.data.TaskWidgetDisplayData
 import com.stillloading.mdschedule.systemutils.ContentProviderParser
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -37,9 +43,12 @@ class WidgetManager() {
     companion object {
         const val CLICK_ACTION = "com.stillloading.mdschedule.CLICK"
         const val EXTRA_ITEM = "com.stillloading.mdschedule.EXTRA_ITEM"
+        private val tasks: MutableList<TaskWidgetDisplayData> = mutableListOf()
     }
 
     private val TAG = "MarkdownScheduleWidget"
+
+    private lateinit var contentProviderParser: ContentProviderParser
 
 
     fun updateWidget(
@@ -47,6 +56,8 @@ class WidgetManager() {
         appWidgetManager: AppWidgetManager,
         appWidgetId: Int
 ){
+        contentProviderParser = ContentProviderParser(context = context)
+
         val rootView = RemoteViews(context.packageName, R.layout.widget_main)
         rootView.setTextViewText(R.id.tvWidgetDate, getTodaysDate())
 
@@ -109,7 +120,76 @@ class WidgetManager() {
         rootView.setPendingIntentTemplate(R.id.lvWidgetTaskList, taskClickPendingIntent)
 
 
-        appWidgetManager.updateAppWidget(appWidgetId, rootView)
+
+
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+            // set the adapter for the list view to show all the tasks
+            // update list view in api <=34
+
+            val listAdapterIntent = Intent(context, TasksWidgetService::class.java).apply {
+                putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
+                data = Uri.parse(toUri(Intent.URI_INTENT_SCHEME) + System.currentTimeMillis())
+            }
+            rootView.setRemoteAdapter(R.id.lvWidgetTaskList, listAdapterIntent)
+            rootView.setEmptyView(R.id.lvWidgetTaskList, R.id.tvWidgetTasksNone)
+
+
+            appWidgetManager.updateAppWidget(appWidgetId, rootView)
+        } else {
+            val itemsBuilder = RemoteViews.RemoteCollectionItems.Builder()
+
+            runBlocking(Dispatchers.IO) {
+
+                contentProviderParser.getWidgetTasks().let { newList ->
+                    tasks.clear()
+                    tasks.addAll(newList)
+                }
+
+            }
+
+            tasks.forEachIndexed{ index, task ->
+
+                val view = RemoteViews(context.packageName, R.layout.widget_item_task)
+
+                view.setTextViewText(R.id.tvWidgetTaskSummary, task.summaryText)
+                view.setTextViewText(R.id.tvPriority, task.priority)
+                view.setTextViewText(R.id.tvTask, task.task)
+
+                // strike through text that is checked
+                if(task.isChecked){
+                    view.setTextColor(R.id.tvTask, context.getColor(R.color.checked_text))
+                    view.setTextColor(R.id.tvWidgetTaskSummary, context.getColor(R.color.checked_text))
+                    view.setInt(R.id.tvTask, "setPaintFlags", Paint.STRIKE_THRU_TEXT_FLAG or Paint.ANTI_ALIAS_FLAG)
+                }else{
+                    view.setTextColor(R.id.tvTask, context.getColor(R.color.unchecked_text))
+                    view.setTextColor(R.id.tvWidgetTaskSummary, context.getColor(R.color.unchecked_text))
+                    view.setInt(R.id.tvTask, "setPaintFlags", Paint.ANTI_ALIAS_FLAG)
+                }
+
+                val fillInIntent = Intent().apply {
+                    Bundle().also { extras ->
+                        extras.putInt(WidgetManager.EXTRA_ITEM, index)
+                        putExtras(extras)
+                    }
+                }
+
+                view.setOnClickFillInIntent(R.id.rlWidgetTaskList, fillInIntent)
+
+
+                itemsBuilder.addItem(index.toLong(), view)
+            }
+
+            val items = itemsBuilder.build()
+
+            rootView.setRemoteAdapter(R.id.lvWidgetTaskList, items)
+
+            rootView.setEmptyView(R.id.lvWidgetTaskList, R.id.tvWidgetTasksNone)
+
+
+            appWidgetManager.updateAppWidget(appWidgetId, rootView)
+        }
+
     }
 
     private fun getTodaysDate(): String {
