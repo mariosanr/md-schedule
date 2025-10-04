@@ -22,6 +22,7 @@ import android.annotation.SuppressLint
 import android.app.DatePickerDialog
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
@@ -187,8 +188,9 @@ class MainActivity : AppCompatActivity() {
         }
 
 
+        // The time bar should only be set if you are viewing today
         if(timeTaskManager.timeBarView != null){
-            timeTaskManager.setTimeBar(minHour, maxHour)
+            timeTaskManager.setTimeBar(minHour, maxHour, shouldSetTimeBar())
         }
     }
 
@@ -260,6 +262,12 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun shouldSetTimeBar(): Boolean{
+        Log.d(TAG, "Current date: $currentDate")
+        Log.d(TAG, "${LocalDate.now() == currentDate}")
+        return LocalDate.now() == currentDate
+    }
+
 
     private fun setMinMaxHours(tasksList: MutableList<TaskDisplayData>){
         val hourRegEx = Regex("^(?<hour>\\d\\d?)")
@@ -307,9 +315,10 @@ class MainActivity : AppCompatActivity() {
             linearLayoutMain.alpha = 0.4f
             updatingTasks = true
 
+            val displayDate = contentProviderParser.getDisplayDate()
             // if not updating, use the last modified date, since that is what the tasks in the database were made with
             val date = if(update)
-                currentDate else contentProviderParser.getDisplayDate() ?: currentDate
+                currentDate else displayDate ?: currentDate
 
             val (timeTasks, nonTimeTasks) = contentProviderParser.getTasks(date.toString(), update) ?: run {
                 pbLoadingWheel.visibility = View.GONE
@@ -345,7 +354,9 @@ class MainActivity : AppCompatActivity() {
             setMinMaxHours(timeTasks)
             dayViewHourAdapter.changeHours(minHour,maxHour)
 
-            timeTaskManager.setTimeTasks(timeTasks, minHour, maxHour)
+
+            // The time bar should only be set if you are viewing today
+            timeTaskManager.setTimeTasks(timeTasks, minHour, maxHour, shouldSetTimeBar())
 
 
             setTodayDate()

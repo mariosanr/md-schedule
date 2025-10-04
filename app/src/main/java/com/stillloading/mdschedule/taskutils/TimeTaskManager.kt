@@ -54,7 +54,7 @@ class TimeTaskManager (
         frameLayout.removeAllViews()
     }
 
-    fun setTimeTasks(tasks: MutableList<TaskDisplayData>, minHour: Int, maxHour: Int){
+    fun setTimeTasks(tasks: MutableList<TaskDisplayData>, minHour: Int, maxHour: Int, shouldSetTimeBar: Boolean){
         resetTasks()
 
         val taskDisplayList = getVerticalVariables(tasks, minHour)
@@ -77,13 +77,16 @@ class TimeTaskManager (
             frameLayout.addView(itemTimeTaskBinding.root, params)
         }
 
-        setTimeBar(minHour, maxHour)
+        setTimeBar(minHour, maxHour, shouldSetTimeBar)
     }
 
 
-    fun setTimeBar(minHour: Int, maxHour: Int){
+    fun setTimeBar(minHour: Int, maxHour: Int, shouldSetTimeBar: Boolean){
         if(timeBarView != null){
             frameContainer.removeView(timeBarView)
+        }
+        if(!shouldSetTimeBar){
+            return
         }
 
         val timeNow = LocalTime.now()
