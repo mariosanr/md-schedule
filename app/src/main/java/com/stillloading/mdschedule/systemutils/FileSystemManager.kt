@@ -45,6 +45,8 @@ class FileSystemManager(
     private val context: Context
 ) {
 
+    private val TAG = "Md Companion Debug"
+
     companion object {
         private val DEFAULT_DIRECTORIES = setOf<String>()
         private val DEFAULT_TASKS_TAG = ""
@@ -233,9 +235,9 @@ class FileSystemManager(
 
     fun shouldChangeNotifications(date: String): Boolean{
         val today = LocalDate.now()
-        val tomorrow = today.plusDays(1)
+        //val tomorrow = today.plusDays(1)
 
-        return date == today.toString() || date == tomorrow.toString()
+        return date == today.toString() // || date == tomorrow.toString()
     }
 
     fun cancelTaskNotifications(tasksSize: Int, taskAlarmManager: TaskAlarmManager){
@@ -243,17 +245,22 @@ class FileSystemManager(
 
     }
 
-    fun setTaskNotifications(tasks: Array<TaskEntityData>, settings: SettingsData, taskAlarmManager: TaskAlarmManager){
-        if(settings.notificationsEnabled && settings.dayPlannerNotificationsEnabled){
-            taskAlarmManager.createAllNotificationAlarmIntent(tasks.toMutableList(), TaskDisplayManager(settings))
-        }else if(settings.notificationsEnabled){
+    fun setTaskNotifications(tasks: Array<TaskEntityData>, settings: SettingsData, taskAlarmManager: TaskAlarmManager, date: String){
+        if(settings.notificationsEnabled){
             val tasksList = mutableListOf<TaskEntityData>()
-            for(task in tasks){
-                if(!task.isDayPlanner.toBoolean()) tasksList.add(task)
+
+            for (task in tasks) {
+                if(task.evDate == date){
+                    if(settings.dayPlannerNotificationsEnabled) {
+                        tasksList.add(task)
+                    } else{
+                        if (!task.isDayPlanner.toBoolean()) tasksList.add(task)
+                    }
+                }
             }
+
             taskAlarmManager.createAllNotificationAlarmIntent(tasksList, TaskDisplayManager(settings))
         }
-
     }
 
 

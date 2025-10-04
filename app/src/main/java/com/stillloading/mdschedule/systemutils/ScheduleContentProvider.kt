@@ -271,7 +271,7 @@ class ScheduleContentProvider : ContentProvider() {
                             fileSystemManager.saveDisplayDate(date)
 
                             if(shouldChangeNotifs){
-                                fileSystemManager.setTaskNotifications(tasksArray, settings, taskAlarmManager)
+                                fileSystemManager.setTaskNotifications(tasksArray, settings, taskAlarmManager, date)
                             }
                         }
                     }
