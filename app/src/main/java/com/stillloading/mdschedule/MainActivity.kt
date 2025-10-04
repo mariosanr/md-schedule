@@ -267,19 +267,23 @@ class MainActivity : AppCompatActivity() {
             if(task.evStartTime == null) continue
             var startTime = hourRegEx.find(task.evStartTime)?.groups?.get("hour")?.value?.toInt()
             if (startTime != null) {
-                startTime = if(startTime >= 24) 24 else startTime
-                if((minHour == -1) or (startTime < minHour)){
-                    minHour = startTime
-                }
-
                 var endTime: Int = startTime + 1
                 if(task.evEndTime != null) {
                     endTime = hourRegEx.find(task.evEndTime)?.groups?.get("hour")?.value?.toInt() ?: endTime
                 }
 
+                // add 1 to the max hour to display everything correctly
                 endTime = if(endTime + 1 > 24) 24 else endTime + 1
                 if((maxHour == -1) or (endTime > maxHour)){
                     maxHour = endTime
+                }
+
+                // max maxHour to 24
+                startTime = if(startTime >= 24) 24 else startTime
+                // subtract 1 from the min hour for the time bar to be more useful
+                startTime = if(startTime - 1 < 0) 0 else startTime - 1
+                if((minHour == -1) or (startTime < minHour)){
+                    minHour = startTime
                 }
             }
 
