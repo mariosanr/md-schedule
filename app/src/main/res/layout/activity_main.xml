@@ -8,18 +8,20 @@
     tools:context=".MainActivity"
     >
 
-    <TextView
-        android:id="@+id/tvDate"
+    <Button
+        android:id="@+id/bToday"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:paddingTop="7dp"
-        android:paddingBottom="7dp"
-        android:paddingStart="7dp"
-        android:paddingEnd="7dp"
+        android:padding="10dp"
+        android:layout_margin="7dp"
         android:text="@string/example"
-        android:textSize="20sp"
+        android:textSize="18sp"
+        android:backgroundTint="@color/unchecked_card"
+        android:textColor="@color/unchecked_text"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        />
+
 
     <androidx.core.widget.NestedScrollView
         android:id="@+id/scrollView"
@@ -27,7 +29,7 @@
         android:layout_height="wrap_content"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tvDate"
+        app:layout_constraintTop_toBottomOf="@+id/bToday"
         >
 
         <LinearLayout
@@ -38,7 +40,7 @@
             android:paddingTop="10dp"
             android:paddingStart="10dp"
             android:paddingEnd="10dp"
-            android:paddingBottom="100dp"
+            android:paddingBottom="200dp"
             >
 
             <TextView
@@ -121,6 +123,61 @@
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/clDatePicker"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?android:attr/windowBackground"
+        android:paddingHorizontal="15dp"
+        android:paddingVertical="7dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <Button
+            android:id="@+id/bBackDate"
+            android:layout_width="60dp"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/unchecked_card"
+            android:padding="0dp"
+            android:text="◄"
+            android:textColor="@color/unchecked_text"
+            android:textSize="30sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+
+        <Button
+            android:id="@+id/bCurrentDate"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="10dp"
+            android:backgroundTint="@color/unchecked_card"
+            android:padding="0dp"
+            android:text="@string/example"
+            android:textColor="@color/unchecked_text"
+            android:textSize="18sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/bNextDate"
+            app:layout_constraintStart_toEndOf="@+id/bBackDate"
+            app:layout_constraintTop_toTopOf="parent" />
+
+
+        <Button
+            android:id="@+id/bNextDate"
+            android:layout_width="60dp"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/unchecked_card"
+            android:padding="0dp"
+            android:text="►"
+            android:textColor="@color/unchecked_text"
+            android:textSize="30sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <ProgressBar
         android:id="@+id/pbLoadingWheel"

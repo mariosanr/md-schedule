@@ -40,6 +40,7 @@ object ScheduleProviderContract{
     const val PATH_TASKS = "tasks"
     const val PATH_LAST_UPDATED = "last_updated"
     const val PATH_UPDATING = "updating"
+    const val PATH_DISPLAY_DATE = "display_date"
 
 
     const val CODE_ERROR = 0
@@ -90,6 +91,12 @@ object ScheduleProviderContract{
         const val COLUMN_UPDATING = "is_updating"
     }
 
+    object DISPLAY_DATE{
+        val CONTENT_URI: Uri = BASE_CONTENT_URI.buildUpon().appendPath(PATH_DISPLAY_DATE).build()
+
+        const val COLUMN_DATE = "date"
+    }
+
 }
 
 private val uriMatcher = UriMatcher(UriMatcher.NO_MATCH).apply {
@@ -97,6 +104,7 @@ private val uriMatcher = UriMatcher(UriMatcher.NO_MATCH).apply {
     addURI(ScheduleProviderContract.AUTHORITY, ScheduleProviderContract.PATH_TASKS, 2)
     addURI(ScheduleProviderContract.AUTHORITY, ScheduleProviderContract.PATH_LAST_UPDATED, 3)
     addURI(ScheduleProviderContract.AUTHORITY, ScheduleProviderContract.PATH_UPDATING, 4)
+    addURI(ScheduleProviderContract.AUTHORITY, ScheduleProviderContract.PATH_DISPLAY_DATE, 5)
 }
 
 class ScheduleContentProvider : ContentProvider() {
@@ -114,6 +122,7 @@ class ScheduleContentProvider : ContentProvider() {
     // Preferences Data Store
     private lateinit var settingsFlowData: SettingsFlowData
     private lateinit var lastUpdatedFlow: Flow<String>
+    private lateinit var displayDateFlow: Flow<String>
 
 
     override fun onCreate(): Boolean {
@@ -125,6 +134,7 @@ class ScheduleContentProvider : ContentProvider() {
 
         settingsFlowData = fileSystemManager.getSettingsFlow()
         lastUpdatedFlow = fileSystemManager.getLastUpdatedFlow()
+        displayDateFlow = fileSystemManager.getDisplayDateFlow()
 
         return true
     }
@@ -156,7 +166,7 @@ class ScheduleContentProvider : ContentProvider() {
             2 -> { // tasks
                 taskDao.getAll()
             }
-            3 -> {
+            3 -> { // last updated
                 runBlocking(Dispatchers.IO) {
                     val cursor = MatrixCursor(arrayOf(ScheduleProviderContract.LAST_UPDATED.COLUMN_DATETIME)).apply {
                         addRow(arrayOf(fileSystemManager.getLastUpdated(lastUpdatedFlow)))
@@ -165,12 +175,21 @@ class ScheduleContentProvider : ContentProvider() {
                     cursor
                 }
             }
-            4 -> {
+            4 -> { // updating
                 val cursor = MatrixCursor(arrayOf(ScheduleProviderContract.UPDATING_TASKS.COLUMN_UPDATING)).apply {
                     addRow(arrayOf(updatingDB.toString()))
                 }
 
                 cursor
+            }
+            5 -> {
+                runBlocking(Dispatchers.IO) {
+                    val cursor = MatrixCursor(arrayOf(ScheduleProviderContract.DISPLAY_DATE.COLUMN_DATE)).apply {
+                        addRow(arrayOf(fileSystemManager.getDisplayDate(displayDateFlow)))
+                    }
+
+                    cursor
+                }
             }
             else -> { // not recognized
                 throw IllegalArgumentException()
@@ -238,15 +257,22 @@ class ScheduleContentProvider : ContentProvider() {
 
                             // wait for operation to complete to cancel notifications and delete database
                             val taskCount = taskDao.getCount()
-                            fileSystemManager.cancelTaskNotifications(taskCount, taskAlarmManager)
+
+                            val shouldChangeNotifs = fileSystemManager.shouldChangeNotifications(date)
+                            if(shouldChangeNotifs){
+                                fileSystemManager.cancelTaskNotifications(taskCount, taskAlarmManager)
+                            }
 
                             taskDao.deleteAll()
 
 
                             taskDao.insertAll(*tasksArray)
                             fileSystemManager.saveLastUpdated(LocalDateTime.now())
+                            fileSystemManager.saveDisplayDate(date)
 
-                            fileSystemManager.setTaskNotifications(tasksArray, settings, taskAlarmManager)
+                            if(shouldChangeNotifs){
+                                fileSystemManager.setTaskNotifications(tasksArray, settings, taskAlarmManager, date)
+                            }
                         }
                     }
                     updatingDB = false

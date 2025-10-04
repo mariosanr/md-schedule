@@ -45,6 +45,8 @@ class FileSystemManager(
     private val context: Context
 ) {
 
+    private val TAG = "Md Companion Debug"
+
     companion object {
         private val DEFAULT_DIRECTORIES = setOf<String>()
         private val DEFAULT_TASKS_TAG = ""
@@ -56,6 +58,7 @@ class FileSystemManager(
         private val DEFAULT_SKIP_DIRECTORIES = setOf(".obsidian", ".trash")
 
         private val DEFAULT_LAST_UPDATED = "null"
+        private val DEFAULT_DISPLAY_DATE = "null"
 
         private const val directoriesName = ScheduleProviderContract.SETTINGS.DIRECTORIES
         private const val tasksTagName = ScheduleProviderContract.SETTINGS.TASKS_TAG
@@ -67,6 +70,7 @@ class FileSystemManager(
         private const val skipDirectoriesName = ScheduleProviderContract.SETTINGS.SKIP_DIRECTORIES
 
         private const val lastUpdatedName = ScheduleProviderContract.LAST_UPDATED.COLUMN_DATETIME
+        private const val displayDateName = ScheduleProviderContract.DISPLAY_DATE.COLUMN_DATE
 
         private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
         private val directoriesKey = stringSetPreferencesKey(directoriesName)
@@ -79,6 +83,7 @@ class FileSystemManager(
         private val skipDirectoriesKey = stringSetPreferencesKey(skipDirectoriesName)
 
         private val lastUpdatedKey = stringPreferencesKey(lastUpdatedName)
+        private val displayDateKey = stringPreferencesKey(displayDateName)
     }
 
     suspend fun saveSettings(settingsData: SettingsData) {
@@ -203,6 +208,23 @@ class FileSystemManager(
     }
 
 
+    fun getDisplayDateFlow(): Flow<String>{
+        val flow: Flow<String> = context.dataStore.data.map { preferences ->
+            preferences[displayDateKey] ?: DEFAULT_DISPLAY_DATE
+        }
+        return flow
+    }
+
+    suspend fun getDisplayDate(flow: Flow<String>): String{
+        return flow.firstOrNull().toString()
+    }
+
+    suspend fun saveDisplayDate(date: String){
+        context.dataStore.edit { settings ->
+            settings[displayDateKey] = date // maybe I should set a formatter to be sure
+        }
+    }
+
     fun cancelUpdateTimes(settings: SettingsData, taskAlarmManager: TaskAlarmManager){
         taskAlarmManager.cancelAllUpdateAlarms(settings.updateTimes.size)
     }
@@ -211,22 +233,34 @@ class FileSystemManager(
         taskAlarmManager.createAllUpdateAlarms(settings.updateTimes.toList())
     }
 
+    fun shouldChangeNotifications(date: String): Boolean{
+        val today = LocalDate.now()
+        //val tomorrow = today.plusDays(1)
+
+        return date == today.toString() // || date == tomorrow.toString()
+    }
+
     fun cancelTaskNotifications(tasksSize: Int, taskAlarmManager: TaskAlarmManager){
         taskAlarmManager.cancelAllNotificationAlarmIntent(tasksSize)
 
     }
 
-    fun setTaskNotifications(tasks: Array<TaskEntityData>, settings: SettingsData, taskAlarmManager: TaskAlarmManager){
-        if(settings.notificationsEnabled && settings.dayPlannerNotificationsEnabled){
-            taskAlarmManager.createAllNotificationAlarmIntent(tasks.toMutableList(), TaskDisplayManager(settings))
-        }else if(settings.notificationsEnabled){
+    fun setTaskNotifications(tasks: Array<TaskEntityData>, settings: SettingsData, taskAlarmManager: TaskAlarmManager, date: String){
+        if(settings.notificationsEnabled){
             val tasksList = mutableListOf<TaskEntityData>()
-            for(task in tasks){
-                if(!task.isDayPlanner.toBoolean()) tasksList.add(task)
+
+            for (task in tasks) {
+                if(task.evDate == date){
+                    if(settings.dayPlannerNotificationsEnabled) {
+                        tasksList.add(task)
+                    } else{
+                        if (!task.isDayPlanner.toBoolean()) tasksList.add(task)
+                    }
+                }
             }
+
             taskAlarmManager.createAllNotificationAlarmIntent(tasksList, TaskDisplayManager(settings))
         }
-
     }
 
 
