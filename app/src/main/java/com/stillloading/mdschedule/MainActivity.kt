@@ -22,7 +22,6 @@ import android.annotation.SuppressLint
 import android.app.DatePickerDialog
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
@@ -263,8 +262,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun shouldSetTimeBar(): Boolean{
-        Log.d(TAG, "Current date: $currentDate")
-        Log.d(TAG, "${LocalDate.now() == currentDate}")
         return LocalDate.now() == currentDate
     }
 
