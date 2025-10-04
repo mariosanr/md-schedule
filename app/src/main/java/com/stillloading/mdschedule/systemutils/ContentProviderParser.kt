@@ -189,8 +189,10 @@ class ContentProviderParser(
             return null
         }
 
-        // update the widgets when the tasks are updated on the app
-        updateWidgets()
+        // update the widgets when the tasks are updated on the app only for today
+        if(date == LocalDate.now().toString()){
+            updateWidgets()
+        }
 
         return ScheduleProviderContract.CODE_SUCCESS
     }
