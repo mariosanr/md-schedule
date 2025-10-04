@@ -26,7 +26,6 @@ import androidx.room.PrimaryKey
 data class TaskEntityData(
     @PrimaryKey val uid: Int,
 
-    @ColumnInfo(name = "task_date") val date: String,
     @ColumnInfo(name = "task") val task: String,
     @ColumnInfo(name = "priority") val priority: Int,
     @ColumnInfo(name = "status") val status: String?,

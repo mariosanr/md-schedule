@@ -229,7 +229,6 @@ class ContentProviderParser(
 
             //val idColumn = getColumnIndex(ScheduleProviderContract.TASKS.COLUMN_UID)
 
-            val dateColumn = getColumnIndex(ScheduleProviderContract.TASKS.COLUMN_DATE)
             val taskColumn = getColumnIndex(ScheduleProviderContract.TASKS.COLUMN_TASK)
             val priorityColumn = getColumnIndex(ScheduleProviderContract.TASKS.COLUMN_PRIORITY)
             val statusColumn = getColumnIndex(ScheduleProviderContract.TASKS.COLUMN_STATUS)

@@ -277,7 +277,6 @@ class FileSystemManager(
             dbTasks.add(TaskEntityData(
                 uid = uid,
 
-                date = date,
                 task = task.task,
                 priority = task.priority.ordinal,
                 status = task.status,
