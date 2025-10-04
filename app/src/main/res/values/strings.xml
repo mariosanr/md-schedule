@@ -32,7 +32,7 @@
     <string name="notificationsTitle"><u>Notifications</u></string>
     <string name="notificationsSubtitle">Enable to get notifications on tasks.</string>
     <string name="notificationsSubtitleNewerVersions">Enable to get notifications on tasks.
-        \n<b><i>In order to get notifications on time, please activate alarms and reminders.
+        \n<b><i>In order to get notifications on time, activate alarms and reminders.
         \nYou can find it by going to Settings>Apps>MD Schedule>Alarms &amp; reminders>Allow setting alarms and reminders.</i></b></string>
 
     <string name="dayPlannerNotificationsTitle"><u>Notifications for Static Tasks</u></string>
@@ -68,33 +68,35 @@
 
     <string name="useTitle"><u>How to use</u></string>
     <string name="useExplanation1">
-        1. Using an external software for creating and editing Markdown files (.md),
+        1. Using an external software for creating and editing Markdown files (.md) e.g. Obsidian,
         you can set tasks and events by using the following syntax:\n\n
         - All tasks and events must be in a line that starts with a Markdown checkbox \'\- [ ]\' \n
-        - Start date: 🛫 2024\-12\-31\n
-        - Scheduled date: ⏳ 2024\-12\-31 (If not set it will be taken as the file name if applicable)\n
-        - Due date: 📅 2024\-12\-31\n
+        - Start date: 🛫 2025\-12\-31\n
+        - Scheduled date: ⏳ 2025\-12\-31 (If not set it will be taken as the file name if it is in the form \'YYYY\-MM\-DD.md\')\n
+        - Due date: 📅 2025\-12\-31\n
         - Priority (from highest to lowest): 🔺, ⏫, 🔼, (No priority = normal), 🔽, ⏬\n
         - Status(character inside checkbox): To do [ ], Done [x], Cancelled [\-], In Progress [\/]\n
         - Optional tag to differentiate tasks that you want the program to recognize e.g. \#task or \#todo\n
         - Set an event:\n
+        If enabled, a notification will be delivered on the start time of the event. Any of these is valid:\n
         \@ 9:00\n
         \@ 09:30 \- 12:00\n
         \@ 2024\-12\-31 8:45 \- 09:00\n
         For those without a date, it will use one of start date, due date, or scheduled date (the priority is in that order).\n
-        If enabled, a notification will be delivered on the start time of the event. Any of these is valid:\n
         - Set a static event (not compatible with the syntax specified above),
-        which needs to be located inside a file with today\'s date as the title e.g. 2024\-12\-31.md:\n
+        which needs to be located inside a file with today\'s date as the title e.g. 2025\-12\-31.md:\n
         These may be inside a checkbox (\- [ ]) or a normal bullet point (\-).\n
         08:00 \- 09:00 Wake up\n\n
-        Example Markdown file with the title \'2024\-09\-02\':
+        Example Markdown file with the title \'2025\-12\-31.md\':
     </string>
     <string name="useExplanation2">
         2. Save the Markdown file inside a folder in the phone\'s external storage e.g. Documents\n\n
-        3. Specify the folder in Settings \> Folder Paths. You can also change any of the settings according to your preferences.\n\n
-        4. Return to the main page and press the refresh button at the top of the screen.\n\n
+        3. Specify the folder in Settings \> Folder Paths. You can also change any of the other settings according to your preferences.\n\n
+        4. Return to the main page, click the bottom button with the date and select the desired date (in this example December 31, 2025).
+        You can always refresh with the upper \'Refresh\' icon or go back to today by clicking the date at the top.
+        The arrows on the bottom move you one day forward or backward from the date you are currently viewing.\n\n
         5. Wait for the loading wheel to stop. If you leave the application early, it may not update correctly.\n\n
-        Output from the example Markdown file if run on September 2, 2024 (2024\-09\-02):
+        Output from the example:
     </string>
 
 

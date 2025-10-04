@@ -4,12 +4,23 @@ With Markdown Schedule, you can more easily view tasks set throughout all of you
 
 Now available for Android as an APK in the latest release. Coming to the Google Play Store soon.
 
+<p align="center">
+  <img src="docs/images/mdschedule_app_example.png" alt="App" width="300"/>
+</p>
+
 ## Features
 - Daily calendar-like view
 - Notifications
 - Home Screen Widget
 
 ## Use:
+
+[Example file](docs/2025-12-31.md):
+
+<p>
+  <img src="docs/images/mdschedule_file_example.png" alt="App"/>
+</p>
+
 - Compatible with the [Obsidian Tasks plugin](https://github.com/obsidian-tasks-group/obsidian-tasks) with the emoji format:
   - All tasks must be preceded by a Markdown checkbox.
   - Start date: 🛫 2024-12-31

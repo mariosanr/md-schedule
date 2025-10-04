@@ -35,7 +35,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:contentDescription="Example Markdown file"
-            android:src="@drawable/use_example1"
+            android:src="@drawable/use_file_example"
             android:adjustViewBounds="true"
             />
 
@@ -51,7 +51,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:contentDescription="Example output in app"
-            android:src="@drawable/use_example2"
+            android:src="@drawable/use_app_example"
             android:adjustViewBounds="true"
             />
 
