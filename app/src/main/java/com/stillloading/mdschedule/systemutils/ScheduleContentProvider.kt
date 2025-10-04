@@ -65,6 +65,7 @@ object ScheduleProviderContract{
         const val DATE = "date"
 
         const val COLUMN_UID = "uid"
+        const val COLUMN_DATE = "task_date"
         const val COLUMN_TASK = "task"
         const val COLUMN_PRIORITY = "priority"
         const val COLUMN_STATUS = "status"
