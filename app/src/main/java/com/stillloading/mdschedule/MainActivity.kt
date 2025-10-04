@@ -19,12 +19,15 @@
 package com.stillloading.mdschedule
 
 import android.annotation.SuppressLint
+import android.app.DatePickerDialog
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
+import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.ProgressBar
@@ -47,8 +50,12 @@ import com.stillloading.mdschedule.taskutils.TaskPopup
 import com.stillloading.mdschedule.taskutils.TimeTaskManager
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
 import java.time.LocalDate
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.util.Calendar
+import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
 
@@ -60,8 +67,11 @@ class MainActivity : AppCompatActivity() {
     private lateinit var fileSystemManager: FileSystemManager
     private lateinit var contentProviderParser: ContentProviderParser
 
-    private lateinit var tvDate: TextView
+    private lateinit var bToday: Button
     private lateinit var tvLastUpdated: TextView
+    private lateinit var bCurrentDate: Button
+    private lateinit var bBackDate: Button
+    private lateinit var bNextDate: Button
 
     private lateinit var linearLayoutMain: LinearLayout
     private lateinit var rvTaskList: RecyclerView
@@ -74,6 +84,7 @@ class MainActivity : AppCompatActivity() {
 
     private var minHour: Int = -1
     private var maxHour: Int = -1
+    private var currentDate: LocalDate = LocalDate.now()
 
     private var updatingTasks = false
 
@@ -89,19 +100,49 @@ class MainActivity : AppCompatActivity() {
         }
 
 
-        tvDate = findViewById(R.id.tvDate)
+        bToday = findViewById(R.id.bToday)
         tvLastUpdated = findViewById(R.id.tvLastUpdated)
+        bCurrentDate = findViewById(R.id.bCurrentDate)
+        bBackDate = findViewById(R.id.bBackDate)
+        bNextDate = findViewById(R.id.bNextDate)
+
         linearLayoutMain = findViewById(R.id.linearLayoutMain)
         tvTimeTasksNone = findViewById(R.id.tvTimeTasksNone)
         tvNonTimeTasksNone = findViewById(R.id.tvNonTimeTasksNone)
 
         linearLayoutMain.visibility = View.GONE
 
+        fileSystemManager = FileSystemManager(applicationContext)
+        contentProviderParser = ContentProviderParser(applicationContext)
+
 
         setTodayDate()
 
-        fileSystemManager = FileSystemManager(applicationContext)
-        contentProviderParser = ContentProviderParser(applicationContext)
+        currentDate = contentProviderParser.getDisplayDate() ?: LocalDate.now()
+        setCurrentDate(currentDate)
+
+
+        bToday.setOnClickListener {
+            setDate(Calendar.getInstance())
+        }
+
+        bCurrentDate.setOnClickListener {
+            if(!updatingTasks){
+                showDatePickerDialog()
+            }
+        }
+
+        bBackDate.setOnClickListener {
+            val calendar = getCurrentDate()
+            calendar.add(Calendar.DATE, -1)
+            setDate(calendar)
+        }
+
+        bNextDate.setOnClickListener {
+            val calendar = getCurrentDate()
+            calendar.add(Calendar.DATE, 1)
+            setDate(calendar)
+        }
 
 
         val popupBinding = PopupTaskBinding.inflate(layoutInflater)
@@ -135,6 +176,7 @@ class MainActivity : AppCompatActivity() {
         pbLoadingWheel = findViewById(R.id.pbLoadingWheel)
 
 
+
         //reloadTasks(update = false, firstLaunch = true)
     }
 
@@ -146,8 +188,9 @@ class MainActivity : AppCompatActivity() {
         }
 
 
+        // The time bar should only be set if you are viewing today
         if(timeTaskManager.timeBarView != null){
-            timeTaskManager.setTimeBar(minHour, maxHour)
+            timeTaskManager.setTimeBar(minHour, maxHour, shouldSetTimeBar())
         }
     }
 
@@ -155,7 +198,74 @@ class MainActivity : AppCompatActivity() {
     private fun setTodayDate(date: LocalDate = LocalDate.now()){
         val pattern = DateTimeFormatter.ofPattern("'Today:' EEE, MMM d, uuuu")
         val formattedDate = date.format(pattern)
-        tvDate.text = formattedDate
+        bToday.text = formattedDate
+    }
+
+    private fun setCurrentDate(date: LocalDate = LocalDate.now()){
+        val pattern = DateTimeFormatter.ofPattern("MMM d, uuuu")
+        val formattedDate = date.format(pattern)
+        bCurrentDate.text = formattedDate
+    }
+
+    private fun getCurrentDate(): Calendar{
+        val dateFormat = SimpleDateFormat("MMM d, yyyy", Locale.getDefault())
+        val dateString = bCurrentDate.text.toString()
+
+        val calendar = Calendar.getInstance()
+
+        try{
+            val date = dateFormat.parse(dateString)
+
+            if (date != null) {
+                calendar.time = date
+            }
+        }catch (e: Exception){
+            // FIXME only for debugging
+            e.printStackTrace()
+        }
+
+        return calendar
+    }
+
+    private fun showDatePickerDialog() {
+        val calendar = getCurrentDate()
+
+        val year = calendar.get(Calendar.YEAR)
+        val month = calendar.get(Calendar.MONTH)
+        val day = calendar.get(Calendar.DAY_OF_MONTH)
+
+
+        val datePickerDialog = DatePickerDialog(
+            this,
+            { _, selectedYear, selectedMonth, selectedDay ->
+                calendar.set(selectedYear, selectedMonth, selectedDay)
+                setDate(calendar)
+            },
+            year, month, day
+        )
+
+        datePickerDialog.show()
+    }
+
+    private fun setDate(calendar: Calendar){
+        if(!updatingTasks){
+            // Update the buttons text
+            val dateFormat = SimpleDateFormat("MMM d, yyyy", Locale.getDefault())
+
+            val date = dateFormat.format(calendar.time)
+            bCurrentDate.text = date
+
+            // convert calendar to LocalDate and set it for next update
+            currentDate = calendar.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
+
+            reloadTasks(update = true)
+        }
+    }
+
+    private fun shouldSetTimeBar(): Boolean{
+        Log.d(TAG, "Current date: $currentDate")
+        Log.d(TAG, "${LocalDate.now() == currentDate}")
+        return LocalDate.now() == currentDate
     }
 
 
@@ -168,19 +278,23 @@ class MainActivity : AppCompatActivity() {
             if(task.evStartTime == null) continue
             var startTime = hourRegEx.find(task.evStartTime)?.groups?.get("hour")?.value?.toInt()
             if (startTime != null) {
-                startTime = if(startTime >= 24) 24 else startTime
-                if((minHour == -1) or (startTime < minHour)){
-                    minHour = startTime
-                }
-
                 var endTime: Int = startTime + 1
                 if(task.evEndTime != null) {
                     endTime = hourRegEx.find(task.evEndTime)?.groups?.get("hour")?.value?.toInt() ?: endTime
                 }
 
+                // add 1 to the max hour to display everything correctly
                 endTime = if(endTime + 1 > 24) 24 else endTime + 1
                 if((maxHour == -1) or (endTime > maxHour)){
                     maxHour = endTime
+                }
+
+                // max maxHour to 24
+                startTime = if(startTime >= 24) 24 else startTime
+                // subtract 1 from the min hour for the time bar to be more useful
+                startTime = if(startTime - 1 < 0) 0 else startTime - 1
+                if((minHour == -1) or (startTime < minHour)){
+                    minHour = startTime
                 }
             }
 
@@ -201,9 +315,10 @@ class MainActivity : AppCompatActivity() {
             linearLayoutMain.alpha = 0.4f
             updatingTasks = true
 
+            val displayDate = contentProviderParser.getDisplayDate()
             // if not updating, use the last modified date, since that is what the tasks in the database were made with
             val date = if(update)
-                LocalDate.now() else contentProviderParser.getLastUpdated()?.toLocalDate() ?: LocalDate.now()
+                currentDate else displayDate ?: currentDate
 
             val (timeTasks, nonTimeTasks) = contentProviderParser.getTasks(date.toString(), update) ?: run {
                 pbLoadingWheel.visibility = View.GONE
@@ -239,7 +354,9 @@ class MainActivity : AppCompatActivity() {
             setMinMaxHours(timeTasks)
             dayViewHourAdapter.changeHours(minHour,maxHour)
 
-            timeTaskManager.setTimeTasks(timeTasks, minHour, maxHour)
+
+            // The time bar should only be set if you are viewing today
+            timeTaskManager.setTimeTasks(timeTasks, minHour, maxHour, shouldSetTimeBar())
 
 
             setTodayDate()

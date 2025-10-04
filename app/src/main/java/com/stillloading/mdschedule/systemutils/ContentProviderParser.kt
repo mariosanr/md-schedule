@@ -189,8 +189,10 @@ class ContentProviderParser(
             return null
         }
 
-        // update the widgets when the tasks are updated on the app
-        updateWidgets()
+        // update the widgets when the tasks are updated on the app only for today
+        if(date == LocalDate.now().toString()){
+            updateWidgets()
+        }
 
         return ScheduleProviderContract.CODE_SUCCESS
     }
@@ -309,4 +311,25 @@ class ContentProviderParser(
         return isUpdating
     }
 
+
+    fun getDisplayDate(): LocalDate?{
+        var displayDate: LocalDate? = null
+        context.contentResolver.query(
+            ScheduleProviderContract.DISPLAY_DATE.CONTENT_URI, null, null, null, null
+        )?.apply {
+
+            val dateColumn = getColumnIndex(ScheduleProviderContract.DISPLAY_DATE.COLUMN_DATE)
+
+            if(moveToFirst()){
+                val date = getString(dateColumn)
+                if(date != "null"){
+                    try {
+                        displayDate = LocalDate.parse(date)
+                    }catch (_: DateTimeParseException){}
+                }
+            }
+        }?.close()
+
+        return displayDate
+    }
 }

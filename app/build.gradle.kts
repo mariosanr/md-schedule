@@ -7,26 +7,22 @@ plugins {
 
 android {
     namespace = "com.stillloading.mdschedule"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.stillloading.mdschedule"
         minSdk = 28
-        targetSdk = 34
+        // previously 34 here and compile
+        targetSdk = 36
         versionCode = 4
         versionName = "1.0.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-
-        ksp{
-            arg("room.schemaLocation", "$projectDir/schemas")
-        }
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = true
-            isShrinkResources = true
+            isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -62,6 +58,10 @@ dependencies {
 
     // Preferences DataStore
     implementation("androidx.datastore:datastore-preferences:1.1.1")
+
+    // WorkManager
+    val work_version = "2.9.1"
+    implementation("androidx.work:work-runtime-ktx:$work_version")
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
