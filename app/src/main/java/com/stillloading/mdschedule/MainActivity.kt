@@ -111,9 +111,14 @@ class MainActivity : AppCompatActivity() {
 
         linearLayoutMain.visibility = View.GONE
 
+        fileSystemManager = FileSystemManager(applicationContext)
+        contentProviderParser = ContentProviderParser(applicationContext)
+
 
         setTodayDate()
-        setCurrentDate()
+
+        currentDate = contentProviderParser.getDisplayDate() ?: LocalDate.now()
+        setCurrentDate(currentDate)
 
 
         bToday.setOnClickListener {
@@ -137,9 +142,6 @@ class MainActivity : AppCompatActivity() {
             calendar.add(Calendar.DATE, 1)
             setDate(calendar)
         }
-
-        fileSystemManager = FileSystemManager(applicationContext)
-        contentProviderParser = ContentProviderParser(applicationContext)
 
 
         val popupBinding = PopupTaskBinding.inflate(layoutInflater)
@@ -171,6 +173,7 @@ class MainActivity : AppCompatActivity() {
 
 
         pbLoadingWheel = findViewById(R.id.pbLoadingWheel)
+
 
 
         //reloadTasks(update = false, firstLaunch = true)
@@ -306,7 +309,7 @@ class MainActivity : AppCompatActivity() {
 
             // if not updating, use the last modified date, since that is what the tasks in the database were made with
             val date = if(update)
-                currentDate else contentProviderParser.getLastUpdated()?.toLocalDate() ?: currentDate
+                currentDate else contentProviderParser.getDisplayDate() ?: currentDate
 
             val (timeTasks, nonTimeTasks) = contentProviderParser.getTasks(date.toString(), update) ?: run {
                 pbLoadingWheel.visibility = View.GONE

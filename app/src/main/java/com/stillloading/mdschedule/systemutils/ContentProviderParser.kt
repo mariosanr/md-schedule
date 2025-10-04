@@ -312,4 +312,25 @@ class ContentProviderParser(
         return isUpdating
     }
 
+
+    fun getDisplayDate(): LocalDate?{
+        var displayDate: LocalDate? = null
+        context.contentResolver.query(
+            ScheduleProviderContract.DISPLAY_DATE.CONTENT_URI, null, null, null, null
+        )?.apply {
+
+            val dateColumn = getColumnIndex(ScheduleProviderContract.DISPLAY_DATE.COLUMN_DATE)
+
+            if(moveToFirst()){
+                val date = getString(dateColumn)
+                if(date != "null"){
+                    try {
+                        displayDate = LocalDate.parse(date)
+                    }catch (_: DateTimeParseException){}
+                }
+            }
+        }?.close()
+
+        return displayDate
+    }
 }
