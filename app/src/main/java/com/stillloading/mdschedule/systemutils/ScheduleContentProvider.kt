@@ -239,7 +239,11 @@ class ScheduleContentProvider : ContentProvider() {
 
                             // wait for operation to complete to cancel notifications and delete database
                             val taskCount = taskDao.getCount()
-                            fileSystemManager.cancelTaskNotifications(taskCount, taskAlarmManager)
+
+                            val shouldChangeNotifs = fileSystemManager.shouldChangeNotifications(date)
+                            if(shouldChangeNotifs){
+                                fileSystemManager.cancelTaskNotifications(taskCount, taskAlarmManager)
+                            }
 
                             taskDao.deleteAll()
 
@@ -247,7 +251,9 @@ class ScheduleContentProvider : ContentProvider() {
                             taskDao.insertAll(*tasksArray)
                             fileSystemManager.saveLastUpdated(LocalDateTime.now())
 
-                            fileSystemManager.setTaskNotifications(tasksArray, settings, taskAlarmManager)
+                            if(shouldChangeNotifs){
+                                fileSystemManager.setTaskNotifications(tasksArray, settings, taskAlarmManager)
+                            }
                         }
                     }
                     updatingDB = false

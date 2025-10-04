@@ -211,6 +211,13 @@ class FileSystemManager(
         taskAlarmManager.createAllUpdateAlarms(settings.updateTimes.toList())
     }
 
+    fun shouldChangeNotifications(date: String): Boolean{
+        val today = LocalDate.now()
+        val tomorrow = today.plusDays(1)
+
+        return date == today.toString() || date == tomorrow.toString()
+    }
+
     fun cancelTaskNotifications(tasksSize: Int, taskAlarmManager: TaskAlarmManager){
         taskAlarmManager.cancelAllNotificationAlarmIntent(tasksSize)
 
